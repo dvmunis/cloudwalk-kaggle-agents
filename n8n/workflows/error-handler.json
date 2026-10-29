@@ -1,0 +1,53 @@
+{
+  "id": "kgErrorHandler01",
+  "name": "Kaggle Team — Error Handler",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "name": "On orchestrator error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {},
+      "id": "fe9af819-c497-50f0-a01b-eba07d8e167f"
+    },
+    {
+      "name": "Mark attempt failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/executions/{{ $json.execution.id }}/fail",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ node: $json.execution.lastNodeExecuted, error: $json.execution.error.message }) }}",
+        "options": {}
+      },
+      "position": [
+        260,
+        0
+      ],
+      "id": "c8f92488-38f8-5398-839b-a51a9176c6ff"
+    }
+  ],
+  "connections": {
+    "On orchestrator error": {
+      "main": [
+        [
+          {
+            "node": "Mark attempt failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

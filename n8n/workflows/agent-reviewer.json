@@ -1,0 +1,347 @@
+{
+  "id": "kgAgentLBReview1",
+  "name": "Kaggle Team — LB Reviewer Agent",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "81981a7c-aef9-5a3e-b018-5a279b338c16"
+    },
+    {
+      "name": "Start clock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { started_ms: Date.now() } }];"
+      },
+      "id": "bf553228-cba9-54a1-9ef2-189915922216"
+    },
+    {
+      "name": "LB Reviewer Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        420,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Context:\\n' + JSON.stringify($('Input').first().json.context) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "SystemMessagePromptTemplate",
+              "message": "You are part of an autonomous team of agents that competes in Kaggle tabular competitions. Other agents act on your decision without human review, so be concrete, use only the options listed, and never invent column names, metrics or parameters. Explain your decision in `reasoning` in 2-4 sentences that cite the evidence from the context.\n\nWhat the training tool already does, so never ask for it again: text (object) columns are passed to the models as native categorical features; training is 5-fold cross-validation with early stopping. Defaults: lightgbm learning_rate 0.05, num_leaves 63, subsample 0.8, colsample_bytree 0.8; xgboost learning_rate 0.05, max_depth 6, subsample 0.8, colsample_bytree 0.8; n_estimators 3000 as an upper bound for both. Frequency encoding only helps columns with many distinct values.\n\nTeam tools: feature operations (drop columns, frequency encoding, target encoding, numeric columns as categorical, digit features, per-row null count), external data, model choice (lightgbm or xgboost) with hyperparameters, and blends. External data: public datasets with the same columns as the competition (for synthetic Playground competitions, the original dataset they were generated from); their rows are added to the training folds only, so the CV score stays comparable, and adding them often helps more than tuning. Target encoding adds the smoothed mean of the target per value of a column, computed out-of-fold so it does not leak; it helps categorical or discrete columns whose values carry signal. A blend averages the predictions of two or more earlier runs (history entries with blendable true) without retraining and is scored by cross-validation like any run; it gains most when the runs are strong and different, e.g. a lightgbm and an xgboost run, or runs with different features. A per-row null count only helps when the data has missing values; never plan it otherwise.\n\nRole: Leaderboard Reviewer. An iteration just finished. You receive its run (and its public score if the Evaluator submitted it), the team's position on the public leaderboard (from its best submission so far), the gap to the top-20% threshold, the iterations of this attempt and the plan the team is following. Review the plan and propose the next one.\n- If the run was submitted, compare public_score with cv_score: a public score far below the CV (more than about 3x cv_std) means the validation is not trustworthy; say so and favour more regularized models.\n- Judge the plan by the evidence: which changes moved the score and by how much compared with the gap to the goal. Drop directions that did not help.\n- plan: at most 4 steps, each one iteration that changes one thing with the team's tools. Put the step with the largest expected gain first. When tuning one model gives gains far smaller than the gap, prefer bigger levers: target encoding, a different model family, and blends of strong, diverse runs.\n- focus_for_next_iteration: the single concrete change for the next iteration.\n- stop: true only if the goal is reached or no change available to the team could plausibly close the gap."
+            }
+          ]
+        }
+      },
+      "id": "f0613d5e-d6c7-5cd6-8324-cf7836737dba"
+    },
+    {
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        360,
+        220
+      ],
+      "parameters": {
+        "model": "={{ $env.GROQ_MODEL || 'openai/gpt-oss-120b' }}",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "groqApi": {
+          "id": "kgGroqCredent01",
+          "name": "Groq"
+        }
+      },
+      "id": "b7978111-5f3d-5a39-aa46-df9c8b8da728"
+    },
+    {
+      "name": "Decision Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        220
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"assessment\": {\n      \"type\": \"string\"\n    },\n    \"plan\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"focus_for_next_iteration\": {\n      \"type\": \"string\"\n    },\n    \"stop\": {\n      \"type\": \"boolean\"\n    },\n    \"reasoning\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"assessment\",\n    \"plan\",\n    \"focus_for_next_iteration\",\n    \"stop\",\n    \"reasoning\"\n  ]\n}"
+      },
+      "id": "ef45d88c-a5f5-520a-9af1-c80c1bf5e0a8"
+    },
+    {
+      "name": "Decision record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// The trace event for this decision: what the agent decided, what it saw (its\n// full context) and what the LLM call cost (model, attempts, time, prompt size).\n// Token counts stay inside the LangChain sub-node, which workflow code cannot\n// read, so the exact prompt size in characters is logged instead.\n// reviewer, openai/gpt-oss-120b and 3114 are filled in by build_workflows.py.\nconst failures = $('Note failure').isExecuted ? $('Note failure').first().json.failures : 0;\nconst context = $('Input').first().json.context;\n\nreturn [{\n  json: {\n    agent: 'reviewer',\n    kind: 'decision',\n    content: $json.output,\n    reasoning: $json.output.reasoning,\n    context,\n    meta: {\n      model: $env.GROQ_MODEL || 'openai/gpt-oss-120b',\n      llm_attempts: failures + 1,\n      elapsed_ms: Date.now() - $('Start clock').first().json.started_ms,\n      prompt_chars: 3114 + 'Context:\\n'.length + JSON.stringify(context).length,\n    },\n  },\n}];\n"
+      },
+      "position": [
+        700,
+        0
+      ],
+      "id": "d405a80d-57b4-537b-aa16-2dc4a4ac267b"
+    },
+    {
+      "name": "Log decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts/{{ $('Input').first().json.attempt_id }}/events",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "position": [
+        940,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "id": "08085ed3-72c5-5e0e-bf36-79b513e0d162"
+    },
+    {
+      "name": "Return decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: $('LB Reviewer Agent').first().json.output }];"
+      },
+      "id": "3bca8807-63e4-5b77-9624-f684acbc390c"
+    },
+    {
+      "name": "Note failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Counts failed LLM calls in this decision ($runIndex grows on each pass).\nreturn [{ json: { failures: $runIndex + 1, error: $json.error } }];"
+      },
+      "position": [
+        700,
+        400
+      ],
+      "id": "41c8bd0a-e23a-5256-a3fc-871d1f280e8b"
+    },
+    {
+      "name": "Retry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        940,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1dfa4e3b-d67e-5130-8df7-967d86d42906",
+              "leftValue": "={{ $json.failures <= 4 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "422257bd-b5ee-5991-ac93-e82636dc955a"
+    },
+    {
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        400
+      ],
+      "webhookId": "2cdd390a-ef87-5bc6-8b55-5839e63acc37",
+      "parameters": {
+        "amount": 30
+      },
+      "id": "560d6096-db51-57a1-a231-e8d0ae9a4fd4"
+    },
+    {
+      "name": "Give up",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        600
+      ],
+      "parameters": {
+        "errorMessage": "={{ 'LB Reviewer agent: LLM call failed after 4 retries: ' + ($json.error?.message ?? $json.error ?? 'unknown error') }}"
+      },
+      "id": "dd382c6c-9b12-58a0-a7b3-a1aef29eb2f8"
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Start clock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start clock": {
+      "main": [
+        [
+          {
+            "node": "LB Reviewer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LB Reviewer Agent": {
+      "main": [
+        [
+          {
+            "node": "Decision record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Note failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision record": {
+      "main": [
+        [
+          {
+            "node": "Log decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log decision": {
+      "main": [
+        [
+          {
+            "node": "Return decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Note failure": {
+      "main": [
+        [
+          {
+            "node": "Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Give up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "LB Reviewer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "LB Reviewer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "LB Reviewer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

@@ -1,0 +1,347 @@
+{
+  "id": "kgAgentData0001",
+  "name": "Kaggle Team — Data Agent",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodes": [
+    {
+      "name": "Input",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "d648f4dd-ce59-5ccd-beb3-c67b3dc4eb36"
+    },
+    {
+      "name": "Start clock",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { started_ms: Date.now() } }];"
+      },
+      "id": "81e30543-9f76-5371-9a3a-9f4dca1544ba"
+    },
+    {
+      "name": "Data Agent",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        420,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ 'Context:\\n' + JSON.stringify($('Input').first().json.context) }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "SystemMessagePromptTemplate",
+              "message": "You are part of an autonomous team of agents that competes in Kaggle tabular competitions. Other agents act on your decision without human review, so be concrete, use only the options listed, and never invent column names, metrics or parameters. Explain your decision in `reasoning` in 2-4 sentences that cite the evidence from the context.\n\nWhat the training tool already does, so never ask for it again: text (object) columns are passed to the models as native categorical features; training is 5-fold cross-validation with early stopping. Defaults: lightgbm learning_rate 0.05, num_leaves 63, subsample 0.8, colsample_bytree 0.8; xgboost learning_rate 0.05, max_depth 6, subsample 0.8, colsample_bytree 0.8; n_estimators 3000 as an upper bound for both. Frequency encoding only helps columns with many distinct values.\n\nTeam tools: feature operations (drop columns, frequency encoding, target encoding, numeric columns as categorical, digit features, per-row null count), external data, model choice (lightgbm or xgboost) with hyperparameters, and blends. External data: public datasets with the same columns as the competition (for synthetic Playground competitions, the original dataset they were generated from); their rows are added to the training folds only, so the CV score stays comparable, and adding them often helps more than tuning. Target encoding adds the smoothed mean of the target per value of a column, computed out-of-fold so it does not leak; it helps categorical or discrete columns whose values carry signal. A blend averages the predictions of two or more earlier runs (history entries with blendable true) without retraining and is scored by cross-validation like any run; it gains most when the runs are strong and different, e.g. a lightgbm and an xgboost run, or runs with different features. A per-row null count only helps when the data has missing values; never plan it otherwise.\n\nRole: Data agent. Given the data profile, the current plan and focus, and the experiment history, choose the feature operations for this iteration's training run.\n- drop: columns to remove (e.g. pure identifiers or leakage).\n- frequency_encode: columns that get an extra <col>_freq feature with value counts.\n- as_category: numeric columns with few distinct values that behave like categories.\n- target_encode: columns that get an extra <col>_te feature with the out-of-fold target mean; it works for numeric columns with many distinct values too.\n- digit_features: numeric columns that get features from how the value is written (last digits, first decimal, multiple of 100); synthetic generators leave traces there.\n- external_data: names from external_datasets to add as training rows (empty for none).\n- add_null_count: true to add a per-row count of missing values (only useful with nulls).\nUse only column names that appear in profile.features. Start from the features of history.best_full_data_model_run (if any) and change at most one thing. If plan.focus is about the model, hyperparameters or a blend, return the best run's features unchanged, so the effect of the change can be attributed. Never propose a feature set already tried in the history. Empty lists and add_null_count false are a valid answer."
+            }
+          ]
+        }
+      },
+      "id": "ecdbe8d5-1f9e-5a5c-97b8-3ec83e8f9bbc"
+    },
+    {
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        360,
+        220
+      ],
+      "parameters": {
+        "model": "={{ $env.GROQ_MODEL || 'openai/gpt-oss-120b' }}",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "credentials": {
+        "groqApi": {
+          "id": "kgGroqCredent01",
+          "name": "Groq"
+        }
+      },
+      "id": "517a4df8-e9da-5783-8d9b-fb8051bf9324"
+    },
+    {
+      "name": "Decision Schema",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        560,
+        220
+      ],
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"drop\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"frequency_encode\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"as_category\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"target_encode\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"digit_features\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"add_null_count\": {\n      \"type\": \"boolean\"\n    },\n    \"external_data\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"reasoning\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"drop\",\n    \"frequency_encode\",\n    \"as_category\",\n    \"target_encode\",\n    \"digit_features\",\n    \"add_null_count\",\n    \"external_data\",\n    \"reasoning\"\n  ]\n}"
+      },
+      "id": "42bf0b2d-0299-5dfc-8169-173ad0bbf98a"
+    },
+    {
+      "name": "Decision record",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// The trace event for this decision: what the agent decided, what it saw (its\n// full context) and what the LLM call cost (model, attempts, time, prompt size).\n// Token counts stay inside the LangChain sub-node, which workflow code cannot\n// read, so the exact prompt size in characters is logged instead.\n// data, openai/gpt-oss-120b and 3230 are filled in by build_workflows.py.\nconst failures = $('Note failure').isExecuted ? $('Note failure').first().json.failures : 0;\nconst context = $('Input').first().json.context;\n\nreturn [{\n  json: {\n    agent: 'data',\n    kind: 'decision',\n    content: $json.output,\n    reasoning: $json.output.reasoning,\n    context,\n    meta: {\n      model: $env.GROQ_MODEL || 'openai/gpt-oss-120b',\n      llm_attempts: failures + 1,\n      elapsed_ms: Date.now() - $('Start clock').first().json.started_ms,\n      prompt_chars: 3230 + 'Context:\\n'.length + JSON.stringify(context).length,\n    },\n  },\n}];\n"
+      },
+      "position": [
+        700,
+        0
+      ],
+      "id": "243e7ef5-37c9-5519-8839-a3928a2e3fa6"
+    },
+    {
+      "name": "Log decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts/{{ $('Input').first().json.attempt_id }}/events",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "position": [
+        940,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "id": "9ef1b6bf-6c02-5ca2-a2c9-33c63e75d059"
+    },
+    {
+      "name": "Return decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: $('Data Agent').first().json.output }];"
+      },
+      "id": "7958a3ed-0c81-5de0-a607-49d42e69434c"
+    },
+    {
+      "name": "Note failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Counts failed LLM calls in this decision ($runIndex grows on each pass).\nreturn [{ json: { failures: $runIndex + 1, error: $json.error } }];"
+      },
+      "position": [
+        700,
+        400
+      ],
+      "id": "1b4869fb-7b5b-58c2-8a6e-620df472530d"
+    },
+    {
+      "name": "Retry?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        940,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "4421da20-1c65-5768-bde8-56aa3cd19eac",
+              "leftValue": "={{ $json.failures <= 4 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b74e1ac-35ae-58e6-8d1b-7434a0121fdf"
+    },
+    {
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        400
+      ],
+      "webhookId": "582817a6-3d48-5506-af87-18602c2eb8b5",
+      "parameters": {
+        "amount": 30
+      },
+      "id": "e97218bb-4bee-53a0-aca2-b4a7889650b4"
+    },
+    {
+      "name": "Give up",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        600
+      ],
+      "parameters": {
+        "errorMessage": "={{ 'Data agent: LLM call failed after 4 retries: ' + ($json.error?.message ?? $json.error ?? 'unknown error') }}"
+      },
+      "id": "faae528b-1ed6-5f6a-876f-f49c04147e6e"
+    }
+  ],
+  "connections": {
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Start clock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start clock": {
+      "main": [
+        [
+          {
+            "node": "Data Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Agent": {
+      "main": [
+        [
+          {
+            "node": "Decision record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Note failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision record": {
+      "main": [
+        [
+          {
+            "node": "Log decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log decision": {
+      "main": [
+        [
+          {
+            "node": "Return decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Note failure": {
+      "main": [
+        [
+          {
+            "node": "Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Give up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Data Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Data Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision Schema": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Data Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

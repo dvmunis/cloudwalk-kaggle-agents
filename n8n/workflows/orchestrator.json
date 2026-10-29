@@ -1,0 +1,1075 @@
+{
+  "id": "kgOrchestrator01",
+  "name": "Kaggle Team — Orchestrator",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "kgErrorHandler01"
+  },
+  "nodes": [
+    {
+      "name": "Start",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "7d1c6a52-2f4b-4c8e-9a51-6b0f3e9d1a01",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "kaggle-team",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "position": [
+        0,
+        0
+      ],
+      "id": "2b94c958-269e-5090-8c26-016e56d92aad"
+    },
+    {
+      "name": "Read input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Normalize the webhook request: the competition slug is the only required input.\nconst body = $json.body ?? {};\nif (!body.competition) {\n  throw new Error('Body must include \"competition\" (Kaggle slug)');\n}\nconst maxIterations = Math.round(Number(body.max_iterations ?? 3));\nreturn [{\n  json: {\n    competition: body.competition,\n    submit: body.submit === true,\n    sample_frac: body.sample_frac ?? 1,\n    max_iterations: Number.isFinite(maxIterations) ? Math.min(Math.max(maxIterations, 1), 10) : 3,\n    goal: body.goal ?? 'Reach the top 20% of the public leaderboard',\n  },\n}];\n"
+      },
+      "position": [
+        220,
+        0
+      ],
+      "id": "01f1ed41-a1b3-5849-92cc-51432ff8ced1"
+    },
+    {
+      "name": "Start attempt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ competition: $json.competition, goal: $json.goal, execution_id: $execution.id }) }}",
+        "options": {}
+      },
+      "position": [
+        440,
+        0
+      ],
+      "id": "c63c9a48-94d2-5706-8b02-9c560d3c3276"
+    },
+    {
+      "name": "Download data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "position": [
+        660,
+        0
+      ],
+      "id": "5cdcaa61-0a52-5952-ba67-ab69fc139594"
+    },
+    {
+      "name": "Profile data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/profile",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "position": [
+        880,
+        0
+      ],
+      "id": "e95bb9de-e826-5338-bdad-28e997b5a09d"
+    },
+    {
+      "name": "Get history",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/history",
+        "options": {}
+      },
+      "position": [
+        1100,
+        0
+      ],
+      "id": "e4d8cce5-1956-5dbd-9f97-cb03953d5fbe"
+    },
+    {
+      "name": "Planner context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// What the Planner sees: the goal, the data profile and what has been tried before.\nconst input = $('Read input').first().json;\nreturn [{\n  json: {\n    attempt_id: $('Start attempt').first().json.attempt_id,\n    context: {\n      goal: input.goal,\n      iterations_in_this_attempt: input.max_iterations,\n      profile: $('Profile data').first().json,\n      history: $('Get history').first().json,\n    },\n  },\n}];\n"
+      },
+      "position": [
+        1320,
+        0
+      ],
+      "id": "e40c9466-1c44-56ef-9d01-346dfcee9b3e"
+    },
+    {
+      "name": "Planner",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kgAgentPlanner01",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "position": [
+        1540,
+        0
+      ],
+      "id": "82b577ec-684a-5e2e-a274-b7768a31d54c"
+    },
+    {
+      "name": "Discover external data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/external/discover",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ queries: $('Planner').first().json.external_data_queries ?? [] }) }}",
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "position": [
+        1760,
+        0
+      ],
+      "id": "f7c54e71-6db0-5e26-a669-436216091e72"
+    },
+    {
+      "name": "Iteration context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Start of an iteration (one training run). The plan is the Planner's until the\n// LB Reviewer revises it; the focus comes from the previous iteration's feedback.\n// Finished iterations are kept by \"Record iteration\" (its latest run has them all).\nconst input = $('Read input').first().json;\nconst planner = $('Planner').first().json;\nconst iterations = $('Record iteration').isExecuted ? $('Record iteration').first().json.iterations : [];\nconst last = iterations[iterations.length - 1];\nconst revised = $('LB Reviewer').isExecuted ? $('LB Reviewer').first().json : null;\n\nreturn [{\n  json: {\n    attempt_id: $('Start attempt').first().json.attempt_id,\n    iteration: iterations.length + 1,\n    max_iterations: input.max_iterations,\n    iterations,\n    plan: {\n      source: revised ? 'lb_reviewer' : 'planner',\n      strategy: revised ? revised.plan : planner.strategy,\n      focus: last ? last.next_focus : planner.focus_for_this_attempt,\n    },\n  },\n}];\n"
+      },
+      "position": [
+        0,
+        320
+      ],
+      "id": "97235762-1a18-5a9d-ab57-a2a1a03344d9"
+    },
+    {
+      "name": "Refresh history",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/history?limit=40",
+        "options": {}
+      },
+      "position": [
+        220,
+        320
+      ],
+      "id": "6def89a5-9d53-5019-8965-bde1c2e26c60"
+    },
+    {
+      "name": "Data context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// What the Data agent sees: the data profile, the current plan and focus, and past runs.\nconst it = $('Iteration context').first().json;\n// Runs trained on another share of the data are not comparable, so they are left out.\nconst history = $('Refresh history').first().json;\nconst sampleFrac = $('Read input').first().json.sample_frac;\nreturn [{\n  json: {\n    attempt_id: it.attempt_id,\n    context: {\n      iteration: `${it.iteration} of ${it.max_iterations}`,\n      plan: it.plan,\n      profile: $('Profile data').first().json,\n      external_datasets: $('Discover external data').first().json.accepted ?? [],\n      history: { ...history, recent: history.recent.filter((r) => r.sample_frac === sampleFrac) },\n    },\n  },\n}];\n"
+      },
+      "position": [
+        440,
+        320
+      ],
+      "id": "3dbca54c-b6f0-5734-ad35-6997fc54bd39"
+    },
+    {
+      "name": "Data agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kgAgentData0001",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "position": [
+        660,
+        320
+      ],
+      "id": "7b94a700-3fb8-528b-bf26-8092117dbad0"
+    },
+    {
+      "name": "Modeling context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// What the Modeling agent sees: task, plan, chosen features and past runs.\nconst profile = $('Profile data').first().json;\nconst it = $('Iteration context').first().json;\n// Runs trained on another share of the data are not comparable, so they are left out.\nconst history = $('Refresh history').first().json;\nconst sampleFrac = $('Read input').first().json.sample_frac;\nreturn [{\n  json: {\n    attempt_id: it.attempt_id,\n    context: {\n      task: profile.task,\n      train_rows: profile.train_rows,\n      n_features: profile.n_features,\n      iteration: `${it.iteration} of ${it.max_iterations}`,\n      plan: it.plan,\n      feature_config: $('Data agent').first().json,\n      history: { ...history, recent: history.recent.filter((r) => r.sample_frac === sampleFrac) },\n    },\n  },\n}];\n"
+      },
+      "position": [
+        880,
+        320
+      ],
+      "id": "dd51b7e1-68ea-5f8c-8faf-f106f846efcd"
+    },
+    {
+      "name": "Modeling agent",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kgAgentModeling1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "position": [
+        1100,
+        320
+      ],
+      "id": "c932659f-261a-5db8-8cdc-a27f1f12ae62"
+    },
+    {
+      "name": "Build train config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Guardrails between the agents and the worker: agent output is checked against\n// the allowed options and corrected rather than trusted. Every correction is\n// reported so it shows up in the trace.\nconst profile = $('Profile data').first().json;\nconst planner = $('Planner').first().json;\nconst it = $('Iteration context').first().json;\nconst history = $('Refresh history').first().json;\nconst data = $('Data agent').first().json;\nconst modeling = $('Modeling agent').first().json;\nconst input = $('Read input').first().json;\nconst adjustments = [];\n\nconst METRIC = /^(rmse|rmsle|mae|roc_auc|log_loss|accuracy|f1|map@\\d+)$/;\nlet metric = String(planner.metric ?? '').toLowerCase();\nif (!METRIC.test(metric)) {\n  adjustments.push(`metric '${planner.metric}' is not supported; using ${profile.suggested_metric}`);\n  metric = profile.suggested_metric;\n}\n\nconst columns = Object.keys(profile.features);\nconst knownColumns = (field) => {\n  const requested = data[field] ?? [];\n  const unknown = requested.filter((c) => !columns.includes(c));\n  if (unknown.length) adjustments.push(`${field}: ignored unknown columns ${unknown.join(', ')}`);\n  return requested.filter((c) => columns.includes(c));\n};\n\nconst RANGES = {\n  lightgbm: {\n    learning_rate: [0.005, 0.3], num_leaves: [8, 512], max_depth: [-1, 16], min_child_samples: [5, 500],\n    reg_alpha: [0, 100], reg_lambda: [0, 100], subsample: [0.3, 1], colsample_bytree: [0.2, 1],\n    n_estimators: [100, 10000],\n  },\n  xgboost: {\n    learning_rate: [0.005, 0.3], max_depth: [1, 16], min_child_weight: [0, 100], gamma: [0, 20],\n    reg_alpha: [0, 100], reg_lambda: [0, 100], subsample: [0.3, 1], colsample_bytree: [0.2, 1],\n    n_estimators: [100, 10000],\n  },\n};\nconst INTEGER_PARAMS = new Set(['num_leaves', 'max_depth', 'min_child_samples', 'n_estimators']);\n\nconst DEFAULTS = {\n  lightgbm: { learning_rate: 0.05, num_leaves: 63, max_depth: -1, min_child_samples: 20, reg_alpha: 0,\n    reg_lambda: 0, subsample: 0.8, colsample_bytree: 0.8, n_estimators: 3000 },\n  xgboost: { learning_rate: 0.05, max_depth: 6, min_child_weight: 1, gamma: 0, reg_alpha: 0, reg_lambda: 1,\n    subsample: 0.8, colsample_bytree: 0.8, n_estimators: 3000 },\n};\n// The training rows are part of the feature set: adding external data is a feature change.\nconst featureKey = (f, externalData) => JSON.stringify([\n  [...(f.drop ?? [])].sort(), [...(f.frequency_encode ?? [])].sort(), [...(f.as_category ?? [])].sort(),\n  [...(f.target_encode ?? [])].sort(), [...(f.digit_features ?? [])].sort(), f.add_null_count === true,\n  [...(externalData ?? [])].sort(),\n]);\nconst effective = (m, p) => ({ ...DEFAULTS[m], ...p });\nconst runs = [history.best_full_data_run, history.best_full_data_model_run, ...(history.recent ?? [])]\n  .filter(Boolean).filter((r) => r.sample_frac === input.sample_frac);\nconst done = (config, duplicate) => [{\n  json: { config, adjustments, duplicate_of: duplicate ? duplicate.run_id : null },\n}];\nconst note = `iteration ${it.iteration}: ${it.plan.focus ?? ''}`;\n\n// A blend averages the predictions of earlier runs; only runs that saved their\n// predictions and were trained on the same rows can take part.\nconst best = history.best_full_data_model_run;\nlet model = modeling.model;\nif (model === 'blend') {\n  const requested = [...new Set(modeling.blend_runs ?? [])];\n  const usable = requested.filter((id) => runs.some((r) => r.run_id === id && r.blendable && r.model !== 'blend'));\n  const rejected = requested.filter((id) => !usable.includes(id));\n  if (rejected.length) {\n    adjustments.push(`blend: ignored runs ${rejected.join(', ')} (unknown, a blend, another sample size or `\n      + 'trained before predictions were saved)');\n  }\n  if (usable.length >= 2) {\n    const key = JSON.stringify([...usable].sort());\n    const tried = runs.find((r) => r.model === 'blend' && JSON.stringify([...(r.blend_runs ?? [])].sort()) === key);\n    if (tried) adjustments.push(`blend repeats run ${tried.run_id} (cv ${tried.cv_score}); training skipped`);\n    return done({ metric, model: 'blend', blend_runs: usable, sample_frac: input.sample_frac, note }, tried);\n  }\n  // A requested run that only lacks saved predictions is retrained as it was, so the\n  // next iteration can blend it.\n  const missing = runs.find((r) => rejected.includes(r.run_id) && !r.blendable && r.model !== 'blend');\n  if (missing) {\n    adjustments.push(`blend needs two usable runs; retraining run ${missing.run_id} as it was so it can be blended`);\n    return done({ metric, model: missing.model, params: missing.params,\n      features: { target_encode: [], digit_features: [], ...missing.features }, external_data: missing.external_data ?? [],\n      sample_frac: input.sample_frac, note }, null);\n  }\n  adjustments.push('blend needs two usable runs; training the best single-model run\\'s configuration instead');\n  model = best?.model ?? 'lightgbm';\n}\n\nif (!RANGES[model]) {\n  adjustments.push(`model '${model}' is not supported; using lightgbm`);\n  model = 'lightgbm';\n}\n\nconst params = {};\nfor (const [name, value] of Object.entries(modeling.params ?? {})) {\n  const range = RANGES[model][name];\n  if (!range || typeof value !== 'number' || !Number.isFinite(value)) {\n    adjustments.push(`param '${name}' ignored (not allowed for ${model})`);\n    continue;\n  }\n  let safe = Math.min(Math.max(value, range[0]), range[1]);\n  if (INTEGER_PARAMS.has(name)) safe = Math.round(safe);\n  if (safe !== value) adjustments.push(`param '${name}' adjusted ${value} -> ${safe}`);\n  params[name] = safe;\n}\n\n// External datasets: only the ones discovery accepted for this competition.\nconst acceptedExternal = ($('Discover external data').first().json.accepted ?? []).map((d) => d.name);\nconst externalData = [...new Set(data.external_data ?? [])].filter((name) => {\n  if (acceptedExternal.includes(name)) return true;\n  adjustments.push(`external_data: ignored unknown dataset ${name}`);\n  return false;\n});\n\nconst hasNulls = Object.values(profile.features).some((f) => f.null_pct > 0);\nif (data.add_null_count === true && !hasNulls) {\n  adjustments.push('add_null_count disabled: the data has no missing values');\n}\n\nconst features = {\n  drop: knownColumns('drop'),\n  frequency_encode: knownColumns('frequency_encode'),\n  as_category: knownColumns('as_category'),\n  target_encode: knownColumns('target_encode').filter((c) => !(data.drop ?? []).includes(c)),\n  digit_features: knownColumns('digit_features').filter((c) => profile.features[c]?.min !== undefined),\n  add_null_count: data.add_null_count === true && hasNulls,\n};\n\n// Attribution: one kind of change per iteration relative to a reference run, so\n// the effect on the score can be read from the result. The reference is the best\n// run of the proposed model with the proposed features if one exists (then up to\n// two hyperparameters may change), else the best run of that model (or the best\n// single-model run if the model was never trained). If the features differ from\n// the reference, the params stay as in the reference.\nconst LOWER_IS_BETTER = /^(rmse|rmsle|mae|log_loss)$/;\nconst bestOf = (list) => list.reduce((a, b) => {\n  if (!a) return b;\n  const better = LOWER_IS_BETTER.test(metric) ? b.cv_score < a.cv_score : b.cv_score > a.cv_score;\n  return better ? b : a;\n}, null);\nconst ofModel = runs.filter((r) => r.model === model);\nconst ref = bestOf(ofModel.filter((r) => featureKey(r.features, r.external_data) === featureKey(features, externalData))) ?? bestOf(ofModel) ?? best;\nif (ref && RANGES[ref.model]) {\n  const refParams = effective(ref.model, ref.params);\n  if (featureKey(features, externalData) !== featureKey(ref.features, ref.external_data)) {\n    const ownParams = effective(model, params);\n    const paramsChanged = model !== ref.model\n      || Object.keys(refParams).some((k) => ownParams[k] !== refParams[k]);\n    if (paramsChanged) {\n      adjustments.push(`features changed vs reference run ${ref.run_id}: model and params reset to that run's `\n        + `(${ref.model} ${JSON.stringify(ref.params)}) to isolate the feature effect`);\n      model = ref.model;\n      for (const k of Object.keys(params)) delete params[k];\n      Object.assign(params, ref.params);\n    }\n  } else if (model === ref.model) {\n    const ownParams = effective(model, params);\n    const changed = Object.keys(ownParams).filter((k) => ownParams[k] !== refParams[k]);\n    for (const k of changed.slice(2)) {\n      adjustments.push(`param '${k}' reverted to the reference run's value ${refParams[k]}: at most two `\n        + `hyperparameter changes per iteration`);\n      if (k in ref.params) params[k] = ref.params[k];\n      else delete params[k];\n    }\n  }\n}\n\n// Repeats add no information, except retraining a run from before predictions\n// were saved, which makes it available for blending.\nconst matches = runs.filter((r) => r.model === model && featureKey(r.features, r.external_data) === featureKey(features, externalData)\n  && JSON.stringify(effective(r.model, r.params)) === JSON.stringify(effective(model, params)));\nconst tried = matches.find((r) => r.blendable) ?? null;\nif (tried) {\n  adjustments.push(`configuration repeats run ${tried.run_id} (cv ${tried.cv_score}); training skipped`);\n} else if (matches.length) {\n  adjustments.push(`configuration repeats run ${matches[0].run_id}, which has no saved predictions; retrained so it can be blended`);\n}\n\nreturn done({ metric, model, params, features, external_data: externalData, sample_frac: input.sample_frac, note }, tried);\n"
+      },
+      "position": [
+        1320,
+        320
+      ],
+      "id": "1f81230b-1179-59d5-af39-f95742723348"
+    },
+    {
+      "name": "Log guardrails",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts/{{ $('Start attempt').first().json.attempt_id }}/events",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ agent: 'guardrails', kind: 'message', content: $json, reasoning: $json.adjustments.length ? 'Agent output corrected to the allowed options' : 'Agent output accepted as is' }) }}",
+        "options": {}
+      },
+      "position": [
+        1540,
+        320
+      ],
+      "id": "4c72d1be-5dc4-5cb3-ab42-686fc9e51539",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "name": "New config?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8c2458e5-7ab3-52e0-aeff-ce6f49d67bdb",
+              "leftValue": "={{ !$('Build train config').first().json.duplicate_of }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        1760,
+        320
+      ],
+      "id": "5308c76c-800e-5dd8-8095-5fb52b58efb0"
+    },
+    {
+      "name": "Train",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/train",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Build train config').first().json.config) }}",
+        "options": {
+          "timeout": 1800000
+        }
+      },
+      "position": [
+        1980,
+        320
+      ],
+      "id": "d63c469e-dd40-5575-8edd-75e8bd5c9b0b"
+    },
+    {
+      "name": "Evaluator context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// What the Evaluator sees: the run that just finished and the best earlier full-data run.\nconst run = $('Train').first().json;\nreturn [{\n  json: {\n    attempt_id: $('Start attempt').first().json.attempt_id,\n    context: {\n      run: {\n        run_id: run.run_id,\n        metric: run.metric,\n        higher_is_better: run.higher_is_better,\n        cv_score: run.cv_score,\n        cv_std: run.cv_std,\n        fold_scores: run.fold_scores,\n        best_iterations: run.best_iterations,\n        sample_frac: run.config.sample_frac,\n        model: run.config.model,\n        params: run.config.params,\n        features: run.config.features,\n        top_features: run.top_features.slice(0, 8),\n        blend: run.blend,\n      },\n      best_previous_full_data_run: $('Refresh history').first().json.best_full_data_run,\n    },\n  },\n}];\n"
+      },
+      "position": [
+        2200,
+        320
+      ],
+      "id": "c1494d8a-a1c7-5231-82b6-64909ec25e08"
+    },
+    {
+      "name": "Evaluator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kgAgentEvaluat01",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "position": [
+        2420,
+        320
+      ],
+      "id": "7f4a175c-d718-5d1d-8358-7e56fd6fcb3a"
+    },
+    {
+      "name": "Submit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "28cc0825-2e58-5478-9980-df14ede139bb",
+              "leftValue": "={{ $('Read input').first().json.submit && $json.submit === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        2640,
+        320
+      ],
+      "id": "9b20bcf6-e90c-54ce-a37e-1c02a7cdad96"
+    },
+    {
+      "name": "Submit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/submit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ run_id: $('Train').first().json.run_id, message: $('Evaluator').first().json.verdict }) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "position": [
+        2860,
+        160
+      ],
+      "id": "bbd85b6c-d0c4-5421-8a48-db96dfac5d79"
+    },
+    {
+      "name": "Leaderboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.WORKER_URL }}/competitions/{{ $('Read input').first().json.competition }}/leaderboard",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Attempt-Id",
+              "value": "={{ $('Start attempt').first().json.attempt_id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "position": [
+        3080,
+        160
+      ],
+      "id": "724fc2b4-754f-506a-b22a-72da4bcdd0aa"
+    },
+    {
+      "name": "Reviewer context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// What the LB Reviewer sees at the end of every iteration: the team's position on\n// the public leaderboard (from its best submission so far), how far the goal is,\n// what the team tried in this attempt and the plan it was following.\nconst input = $('Read input').first().json;\nconst it = $('Iteration context').first().json;\nconst run = $('Train').first().json;\nlet submission;\ntry {\n  submission = $('Submit').isExecuted ? $('Submit').first()?.json : undefined;\n} catch {\n  submission = undefined;\n}\nconst submitted = submission?.run_id === run.run_id;\nconst lb = $('Leaderboard').first().json;\nconst gap = lb.higher_is_better\n  ? lb.top20_threshold - lb.best_public_score\n  : lb.best_public_score - lb.top20_threshold;\n\nreturn [{\n  json: {\n    attempt_id: it.attempt_id,\n    run_id: run.run_id,\n    context: {\n      goal: input.goal,\n      data_has_missing_values: Object.values($('Profile data').first().json.features).some((f) => f.null_pct > 0),\n      iteration: `${it.iteration} of ${it.max_iterations}`,\n      current_plan: it.plan,\n      this_run: {\n        run_id: run.run_id,\n        cv_score: run.cv_score,\n        cv_std: run.cv_std,\n        submitted,\n        public_score: submitted ? submission.public_score : null,\n        model: run.config.model,\n        params: run.config.params,\n        features: run.config.features,\n      },\n      leaderboard: {\n        rank: lb.rank,\n        teams: lb.teams,\n        top_percent: lb.top_percent,\n        our_best_public_score: lb.best_public_score,\n        top20_threshold: lb.top20_threshold,\n        leader_score: lb.best_score,\n        higher_is_better: lb.higher_is_better,\n        gap_to_top20: Number(gap.toFixed(5)),\n      },\n      earlier_iterations: it.iterations,\n      history: $('Refresh history').first().json.recent.filter((r) => r.sample_frac === input.sample_frac),\n    },\n  },\n}];\n"
+      },
+      "position": [
+        3300,
+        160
+      ],
+      "id": "00abb7c8-b21e-5d2a-86fa-e9a4706f75a2"
+    },
+    {
+      "name": "LB Reviewer",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "kgAgentLBReview1",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "position": [
+        3520,
+        160
+      ],
+      "id": "40d4135c-e966-54e5-80fc-aa5bf1cb5635"
+    },
+    {
+      "name": "Record iteration",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// End of an iteration: record what happened and decide whether to loop again.\n// Nodes inside the loop keep the output of earlier iterations, so a node only\n// counts for this iteration when its output refers to this iteration's run.\nconst it = $('Iteration context').first().json;\nconst built = $('Build train config').first().json;\nconst latest = (node, branch = 0) => {\n  try {\n    return $(node).isExecuted ? $(node).first(branch)?.json : undefined;\n  } catch {\n    return undefined;\n  }\n};\n\nconst finish = (record) => {\n  let stopReason = null;\n  if (record.top_percent <= 20) stopReason = `goal reached: top ${record.top_percent}%`;\n  else if (record.reviewer_stop) stopReason = 'LB Reviewer stopped the attempt';\n  else if (it.iteration >= it.max_iterations) stopReason = `iteration budget used (${it.max_iterations})`;\n  return [{\n    json: {\n      attempt_id: it.attempt_id,\n      record,\n      iterations: [...it.iterations, record],\n      continue: stopReason === null,\n      stop_reason: stopReason,\n    },\n  }];\n};\n\n// The guardrails skipped training: the proposal (after corrections) repeated an\n// earlier run. Agents tend to propose the same thing again, so the focus moves to\n// another step of the plan, and two skips in a row end the attempt.\nif (built.duplicate_of) {\n  let skipsInRow = 1;\n  for (let i = it.iterations.length - 1; i >= 0 && it.iterations[i].skipped; i--) skipsInRow++;\n  const otherSteps = (it.plan.strategy ?? []).filter((step) => step !== it.plan.focus);\n  const nextStep = otherSteps[(skipsInRow - 1) % Math.max(otherSteps.length, 1)];\n  const record = {\n    iteration: it.iteration,\n    focus: it.plan.focus,\n    skipped: `configuration repeats run ${built.duplicate_of}`,\n    guardrail_adjustments: built.adjustments,\n    next_focus: `${nextStep ?? 'A change not tried yet'} (the previous proposal was not trained: `\n      + `${built.adjustments.join('; ')}. Propose a configuration that is not in the history.)`,\n  };\n  const result = finish(record);\n  if (skipsInRow >= 2 && result[0].json.continue) {\n    Object.assign(result[0].json, { continue: false, stop_reason: 'agents repeated earlier runs twice in a row' });\n  }\n  return result;\n}\n\nconst train = $('Train').first().json;\nconst evaluation = $('Evaluator').first().json;\nconst submission = latest('Submit');\nconst submitted = submission?.run_id === train.run_id;\nconst wantedToSubmit = $('Read input').first().json.submit && evaluation.submit === true;\nconst reviewed = latest('Reviewer context')?.run_id === train.run_id;\nconst reviewer = reviewed ? $('LB Reviewer').first().json : null;\nconst lb = reviewed ? latest('Leaderboard') : undefined;\n\nconst record = {\n  iteration: it.iteration,\n  focus: it.plan.focus,\n  run_id: train.run_id,\n  cv_score: train.cv_score,\n  cv_std: train.cv_std,\n  higher_is_better: train.higher_is_better,\n  model: train.config.model,\n  params: train.config.params,\n  features: train.config.features,\n  guardrail_adjustments: built.adjustments,\n  verdict: evaluation.verdict,\n  submitted,\n  next_focus: reviewer ? reviewer.focus_for_next_iteration : evaluation.next_focus,\n};\nif (reviewer) record.lb_assessment = reviewer.assessment;\nif (reviewer?.stop === true) record.reviewer_stop = true;\nif (submitted) record.public_score = submission.public_score;\nif (lb?.rank) {\n  Object.assign(record, {\n    rank: lb.rank,\n    teams: lb.teams,\n    top_percent: lb.top_percent,\n    best_public_score: lb.best_public_score,\n    top20_threshold: lb.top20_threshold,\n  });\n}\nif (wantedToSubmit && !submitted) {\n  const error = latest('Submit', 1);\n  record.submit_error = error?.error?.message ?? error?.error ?? 'submission did not complete';\n}\n\nreturn finish(record);\n"
+      },
+      "position": [
+        3740,
+        320
+      ],
+      "id": "d320429a-7fea-5df9-bd81-748f6d235eaf"
+    },
+    {
+      "name": "Log iteration",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts/{{ $('Start attempt').first().json.attempt_id }}/events",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ agent: 'orchestrator', kind: 'message', content: $json.record, reasoning: $json.continue ? 'Next iteration' : 'Stopping: ' + $json.stop_reason }) }}",
+        "options": {}
+      },
+      "position": [
+        3960,
+        320
+      ],
+      "id": "db228de1-5b38-58f7-8e62-6763ca83b111",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "name": "Next iteration?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "a18a48fa-9bb5-5b76-bdcc-f7d4f1dc731f",
+              "leftValue": "={{ $('Record iteration').first().json.continue === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "position": [
+        4180,
+        320
+      ],
+      "id": "e3eaa9fc-f3ba-549e-b7fb-a667ea571ee0"
+    },
+    {
+      "name": "Summarize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "// Outcome of the attempt: every iteration, the best run and the latest leaderboard position.\nconst loop = $('Record iteration').first().json;\nconst iterations = loop.iterations;\nconst higherIsBetter = iterations.find((i) => i.run_id)?.higher_is_better ?? true;\nconst best = iterations.filter((i) => i.run_id).reduce((a, b) => {\n  if (!a) return b;\n  return (higherIsBetter ? b.cv_score > a.cv_score : b.cv_score < a.cv_score) ? b : a;\n}, null);\n\nconst summary = {\n  iterations: iterations.length,\n  stop_reason: loop.stop_reason,\n  best_run: best && { iteration: best.iteration, run_id: best.run_id, cv_score: best.cv_score, model: best.model },\n  submissions: iterations.filter((i) => i.submitted).length,\n  history: iterations.map((i) => ({\n    iteration: i.iteration,\n    cv_score: i.cv_score,\n    verdict: i.verdict ?? i.skipped,\n    public_score: i.public_score,\n    top_percent: i.top_percent,\n    guardrail_adjustments: i.guardrail_adjustments.length,\n  })),\n};\nconst lastReviewed = [...iterations].reverse().find((i) => i.rank);\nif (lastReviewed) {\n  const { best_public_score, rank, teams, top_percent, top20_threshold } = lastReviewed;\n  Object.assign(summary, { best_public_score, rank, teams, top_percent, top20_threshold });\n}\nreturn [{ json: { summary } }];\n"
+      },
+      "position": [
+        4400,
+        520
+      ],
+      "id": "87f379c1-1b80-51ab-afef-78e241aa7760"
+    },
+    {
+      "name": "Finish attempt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WORKER_URL }}/attempts/{{ $('Start attempt').first().json.attempt_id }}/finish",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'completed', summary: $json.summary }) }}",
+        "options": {}
+      },
+      "position": [
+        4620,
+        520
+      ],
+      "id": "3b0e6935-f966-50ae-9687-01dcd9172400",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ attempt_id: $json.attempt_id, status: $json.status, summary: $json.summary, events: $json.events.length }) }}",
+        "options": {}
+      },
+      "position": [
+        4840,
+        520
+      ],
+      "id": "3dcf0fa9-5264-5a51-a6fe-90dc6c89ad98"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Read input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read input": {
+      "main": [
+        [
+          {
+            "node": "Start attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start attempt": {
+      "main": [
+        [
+          {
+            "node": "Download data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download data": {
+      "main": [
+        [
+          {
+            "node": "Profile data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Profile data": {
+      "main": [
+        [
+          {
+            "node": "Get history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get history": {
+      "main": [
+        [
+          {
+            "node": "Planner context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner context": {
+      "main": [
+        [
+          {
+            "node": "Planner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Planner": {
+      "main": [
+        [
+          {
+            "node": "Discover external data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discover external data": {
+      "main": [
+        [
+          {
+            "node": "Iteration context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Iteration context": {
+      "main": [
+        [
+          {
+            "node": "Refresh history",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refresh history": {
+      "main": [
+        [
+          {
+            "node": "Data context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data context": {
+      "main": [
+        [
+          {
+            "node": "Data agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data agent": {
+      "main": [
+        [
+          {
+            "node": "Modeling context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modeling context": {
+      "main": [
+        [
+          {
+            "node": "Modeling agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modeling agent": {
+      "main": [
+        [
+          {
+            "node": "Build train config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build train config": {
+      "main": [
+        [
+          {
+            "node": "Log guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log guardrails": {
+      "main": [
+        [
+          {
+            "node": "New config?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New config?": {
+      "main": [
+        [
+          {
+            "node": "Train",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Train": {
+      "main": [
+        [
+          {
+            "node": "Evaluator context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluator context": {
+      "main": [
+        [
+          {
+            "node": "Evaluator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluator": {
+      "main": [
+        [
+          {
+            "node": "Submit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reviewer context": {
+      "main": [
+        [
+          {
+            "node": "LB Reviewer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LB Reviewer": {
+      "main": [
+        [
+          {
+            "node": "Record iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record iteration": {
+      "main": [
+        [
+          {
+            "node": "Log iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log iteration": {
+      "main": [
+        [
+          {
+            "node": "Next iteration?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Finish attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finish attempt": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit?": {
+      "main": [
+        [
+          {
+            "node": "Submit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leaderboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit": {
+      "main": [
+        [
+          {
+            "node": "Leaderboard",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leaderboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leaderboard": {
+      "main": [
+        [
+          {
+            "node": "Reviewer context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Record iteration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next iteration?": {
+      "main": [
+        [
+          {
+            "node": "Iteration context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}
