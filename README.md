@@ -122,6 +122,8 @@ The worker also logs errors to its container output (`docker compose logs worker
 | `POST /competitions/{slug}/submit` | Submit a run and wait for its public score |
 | `GET /competitions/{slug}/leaderboard` | Best public score, rank and top-% |
 | `GET /competitions/{slug}/experiments` | Experiment log |
+| `POST /competitions/{slug}/external/discover` · `GET /competitions/{slug}/external` | Find and list external datasets with the competition's columns |
+| `GET /competitions` · `GET /dashboard` | Competitions with experiments; the dashboard page |
 | `POST /attempts` · `POST /attempts/{id}/events` · `POST /attempts/{id}/finish` | Attempt lifecycle and agent decisions |
 | `GET /attempts` · `GET /attempts/{id}` | Attempt list and full trace |
 
@@ -163,6 +165,20 @@ curl -s localhost:8000/attempts/<attempt_id> | python3 -m json.tool  # full trac
 
 Each step is also visible in n8n under **Executions**.
 
+### Dashboard
+
+Open **http://localhost:8000/dashboard**. Served by the worker, it reads the same
+API and shows, per competition:
+
+- best CV overall and by the agents, the live public leaderboard position, and
+  attempts by status;
+- the CV score of every full-data run in training order, marking runs by the
+  agents apart from baselines and manual checks, with the best-so-far line (a
+  table view is one click away);
+- every attempt, and for the one selected, its trace as a timeline: each
+  decision with its reasoning, guardrail corrections, tool calls and results,
+  LLM retries and time, plus the full context each agent saw.
+
 ### Baseline without n8n
 
 ```bash
@@ -172,8 +188,13 @@ docker compose run --rm worker python -m scripts.baseline --competition <slug> -
 ### Tests
 
 ```bash
-docker compose run --rm worker pytest -q
+docker compose run --rm worker pytest -q    # worker: tools, training, trace (29 tests)
+node --test n8n/tests/*.test.js             # Orchestrator guardrails and loop control (15 tests)
 ```
+
+The worker tests use small synthetic competitions (binary, regression, top-k
+multiclass) and never call Kaggle. The n8n tests run the Orchestrator's Code
+nodes outside n8n with a harness that mimics `$()`.
 
 ## Results so far
 
