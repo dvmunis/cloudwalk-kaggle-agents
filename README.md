@@ -173,8 +173,9 @@ API and shows, per competition:
 - best CV overall and by the agents, the live public leaderboard position, and
   attempts by status;
 - the CV score of every full-data run in training order, marking runs by the
-  agents apart from baselines and manual checks, with the best-so-far line (a
-  table view is one click away);
+  agents apart from baselines and manual checks, with the best-so-far line and
+  the public leaderboard's top-50% and top-20% cut-offs drawn on the same axis
+  (the tooltip says where each run would land; a table view is one click away);
 - every attempt, and for the one selected, its trace as a timeline: each
   decision with its reasoning, guardrail corrections, tool calls and results,
   LLM retries and time, plus the full context each agent saw.

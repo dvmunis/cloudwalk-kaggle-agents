@@ -98,7 +98,8 @@
 
   <section class="card">
     <h2>Cross-validation score per experiment</h2>
-    <p class="sub" id="chart-sub">Full-data runs in the order they were trained.</p>
+    <p class="sub" id="chart-sub">Full-data runs in the order they were trained. Reference lines are the public
+      leaderboard's cut-offs; public scores have run about 0.0003 above CV here, so read them as approximate.</p>
     <div class="legend" id="legend"></div>
     <div class="chart-wrap" id="chart-wrap"><div class="tooltip" id="tooltip"></div></div>
     <details><summary>Table view</summary><div class="scroll" id="exp-table"></div></details>
@@ -149,6 +150,7 @@ async function load(comp) {
     if ($('competition').value !== comp || !lb.rank) return;
     setTile('leaderboard', `top ${lb.top_percent}%`,
       `rank ${lb.rank} / ${lb.teams} · best public ${lb.best_public_score} · top 20% at ${lb.top20_threshold}`);
+    renderChart(full, lb);
   }).catch(() => {});
   renderChart(full);
   renderExperimentTable(full);
@@ -190,18 +192,37 @@ const MARK = {
   manual: (x, y) => `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" rx="1.5" fill="var(--series-manual)" stroke="var(--surface-1)" stroke-width="2"/>`,
 };
 
-function renderChart(full) {
+// Where a score would land: the leaderboard cut-offs it clears.
+function landing(score, lb) {
+  if (!lb?.thresholds) return '';
+  const higher = lb.higher_is_better;
+  const clears = (cut) => (higher ? score >= cut : score <= cut);
+  const t = lb.thresholds;
+  const where = clears(t.top_10) ? 'inside the top 10%' : clears(t.top_20) ? 'between the top 20% and top 10%'
+    : clears(t.top_50) ? 'between the top 50% and top 20%' : 'below the top 50%';
+  return `≈ ${where} if public matched CV · leader ${lb.best_score}`;
+}
+
+function renderChart(full, lb = null) {
   const wrap = $('chart-wrap');
-  wrap.querySelector('svg')?.remove();
+  wrap.querySelector(':scope > svg')?.remove();
+  wrap.querySelector('.empty')?.remove();
   $('legend').innerHTML = `
     <span><svg width="12" height="12">${MARK.agents(6, 6)}</svg>Run by the agents</span>
     <span><svg width="12" height="12">${MARK.manual(6, 6)}</svg>Baseline or manual check</span>
-    <span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--best-line)" stroke-width="2" stroke-dasharray="4 3"/></svg>Best so far</span>`;
+    <span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--best-line)" stroke-width="2" stroke-dasharray="4 3"/></svg>Best so far</span>
+    ${lb?.thresholds ? `<span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--text-muted)" stroke-width="1"/></svg>Leaderboard cut-off</span>` : ''}`;
   if (!full.length) { wrap.insertAdjacentHTML('beforeend', '<p class="empty">No full-data runs yet.</p>'); return; }
 
   const W = 1000, H = 300, m = { l: 64, r: 16, t: 12, b: 32 };
   const higher = full[0].higher_is_better;
-  const scores = full.map((e) => e.cv_score);
+  // The top-50% and top-20% cut-offs stay in view, so the gap to the goal is visible;
+  // the leader's score would flatten the runs and is shown in the tooltip instead.
+  const refs = lb?.thresholds ? [
+    { value: lb.thresholds.top_50, label: 'top 50%' },
+    { value: lb.thresholds.top_20, label: 'top 20% · goal' },
+  ] : [];
+  const scores = [...full.map((e) => e.cv_score), ...refs.map((r) => r.value)];
   let lo = Math.min(...scores), hi = Math.max(...scores);
   const pad = (hi - lo || Math.abs(hi) * 0.01 || 1) * 0.12;
   lo -= pad; hi += pad;
@@ -215,6 +236,9 @@ function renderChart(full) {
     <text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${t.toFixed(digits)}</text>`).join('');
   svg += `<text x="${m.l}" y="${H - 8}" font-size="11" fill="var(--text-muted)">first run</text>
           <text x="${W - m.r}" y="${H - 8}" text-anchor="end" font-size="11" fill="var(--text-muted)">latest run</text>`;
+
+  svg += refs.map((r) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(r.value)}" y2="${y(r.value)}" stroke="var(--text-muted)" stroke-width="1"/>
+    <text x="${W - m.r - 4}" y="${y(r.value) - 5}" text-anchor="end" font-size="11" fill="var(--text-secondary)">${esc(r.label)} · ${r.value}</text>`).join('');
 
   let best = null;
   const steps = full.map((e, i) => {
@@ -232,7 +256,7 @@ function renderChart(full) {
     el.addEventListener('mouseenter', () => {
       const e = full[+el.dataset.i];
       tip.innerHTML = `<b>${fmt(e.cv_score)}</b> ${esc(e.metric)} ± ${fmt(e.cv_std)}<br>${esc(describe(e))}<br>
-        <span style="color:var(--text-muted)">${esc(e.run_id)}${e.attempt_id ? ' · attempt ' + esc(e.attempt_id) : ' · manual'}</span>`;
+        ${lb ? `${esc(landing(e.cv_score, lb))}<br>` : ''}<span style="color:var(--text-muted)">${esc(e.run_id)}${e.attempt_id ? ' · attempt ' + esc(e.attempt_id) : ' · manual'}</span>`;
       tip.style.display = 'block';
       const box = wrap.getBoundingClientRect(), r = el.getBoundingClientRect();
       const left = r.left - box.left + r.width / 2 + 12;

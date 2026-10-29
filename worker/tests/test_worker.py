@@ -89,6 +89,8 @@ def test_map_at_k():
 def test_leaderboard_position_reads_direction_from_ordering(scores, mine, rank):
     pos = leaderboard.position(scores, mine)
     assert pos["rank"] == rank and pos["top_percent"] == 60.0
+    # Score of the last team inside each cut: top 20% of 5 teams is the 1st, top 50% the 2nd.
+    assert pos["thresholds"] == {"top_10": scores[0], "top_20": scores[0], "top_50": scores[1]}
 
 
 def test_missing_data_is_a_clear_error(data_root):

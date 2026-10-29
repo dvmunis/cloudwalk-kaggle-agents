@@ -19,13 +19,15 @@ def position(leaderboard_scores: list[float], score: float) -> dict:
     better = sum(1 for s in leaderboard_scores if (s > score if higher_is_better else s < score))
     rank = better + 1
     n = len(leaderboard_scores)
+    cutoff = lambda pct: leaderboard_scores[max(int(n * pct / 100) - 1, 0)]  # noqa: E731 - score of the last team inside
     return {
         "rank": rank,
         "teams": n,
         "top_percent": round(100 * rank / n, 2),
         "higher_is_better": higher_is_better,
         "best_score": leaderboard_scores[0],
-        "top20_threshold": leaderboard_scores[max(int(n * 0.2) - 1, 0)],
+        "top20_threshold": cutoff(20),
+        "thresholds": {f"top_{pct}": cutoff(pct) for pct in (10, 20, 50)},
     }
 
 
