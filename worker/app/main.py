@@ -7,11 +7,12 @@ reasoning explicitly.
 
 import logging
 import traceback
+from pathlib import Path
 from contextlib import asynccontextmanager
 from typing import Any, Callable
 
 from fastapi import FastAPI, Header, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from . import external, kaggle_client, leaderboard, metrics, profiling, settings, store, trace, training
 from .schemas import (AttemptCreate, AttemptFinish, DiscoverRequest, EventCreate, ExecutionFailure, SubmitRequest,
@@ -75,6 +76,21 @@ async def kaggle_error(request: Request, exc: kaggle_client.KaggleError):
 async def unexpected_error(request: Request, exc: Exception):
     log.exception("500 %s %s", request.method, request.url.path, exc_info=exc)
     return JSONResponse(status_code=500, content={"error": f"{type(exc).__name__}: {exc}"})
+
+
+DASHBOARD = Path(__file__).parent / "static" / "dashboard.html"
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+def dashboard():
+    return DASHBOARD.read_text()
+
+
+@app.get("/competitions")
+def competitions():
+    """Competitions with at least one experiment, for the dashboard."""
+    root = settings.runs_dir()
+    return sorted(p.parent.name for p in root.glob("*/experiments.jsonl")) if root.exists() else []
 
 
 @app.get("/health")

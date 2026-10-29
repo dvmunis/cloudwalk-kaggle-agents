@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kaggle Agent Team</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f4f2; --surface-1: #fcfcfb; --border: #e2e1dc; --grid: #ecebe7;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
+    --series-agents: #2a78d6; --series-manual: #eb6834; --best-line: #52514e;
+    --good: #008300; --serious: #c25400; --critical: #d03b3b; --accent-bg: #eef4fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2e2c; --grid: #262624;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+      --series-agents: #3987e5; --series-manual: #d95926; --best-line: #c3c2b7;
+      --good: #3fae3f; --serious: #e07a2e; --critical: #e66767; --accent-bg: #1c2633;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #111110; --surface-1: #1a1a19; --border: #2e2e2c; --grid: #262624;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --series-agents: #3987e5; --series-manual: #d95926; --best-line: #c3c2b7;
+    --good: #3fae3f; --serious: #e07a2e; --critical: #e66767; --accent-bg: #1c2633;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--surface-0); color: var(--text-primary);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  h1 { font-size: 20px; margin: 0; }
+  h2 { font-size: 15px; margin: 0 0 4px; }
+  .sub { color: var(--text-secondary); margin: 0 0 12px; font-size: 13px; }
+  select, button { font: inherit; color: var(--text-primary); background: var(--surface-1);
+                   border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; }
+  button { cursor: pointer; }
+  .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-top: 16px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 16px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .tile .label { color: var(--text-secondary); font-size: 12px; }
+  .tile .value { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .tile .note { color: var(--text-muted); font-size: 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-wrap { position: relative; }
+  .chart-wrap > svg { display: block; width: 100%; height: auto; }
+  .legend svg { flex: none; }
+  .tooltip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+             border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+             max-width: 300px; display: none; z-index: 2; }
+  .tooltip b { font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--text-secondary); font-weight: 500; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tbody tr.clickable { cursor: pointer; }
+  tbody tr.clickable:hover, tbody tr.selected { background: var(--accent-bg); }
+  .status { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .status.completed { color: var(--good); } .status.failed { color: var(--critical); }
+  .status.orphaned { color: var(--serious); } .status.running { color: var(--text-secondary); }
+  .scroll { overflow-x: auto; }
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { border-left: 2px solid var(--border); padding: 4px 0 12px 14px; position: relative; }
+  .timeline li::before { content: ""; position: absolute; left: -5px; top: 9px; width: 8px; height: 8px;
+                         border-radius: 50%; background: var(--text-muted); }
+  .timeline li.decision::before { background: var(--series-agents); }
+  .timeline li.error::before { background: var(--critical); }
+  .ev-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+  .ev-agent { font-weight: 600; }
+  .ev-meta { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .ev-body { color: var(--text-secondary); margin-top: 2px; overflow-wrap: anywhere; }
+  .ev-body .reason { color: var(--text-primary); }
+  details { margin-top: 4px; }
+  summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; }
+  pre { background: var(--surface-0); border: 1px solid var(--border); border-radius: 6px; padding: 8px;
+        font-size: 11.5px; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .empty { color: var(--text-muted); padding: 12px 0; }
+  .adj { color: var(--serious); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Kaggle Agent Team</h1>
+      <p class="sub" style="margin:2px 0 0">Experiments, attempts and every agent decision, read from the worker.</p>
+    </div>
+    <label>Competition <select id="competition"></select></label>
+  </header>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="card">
+    <h2>Cross-validation score per experiment</h2>
+    <p class="sub" id="chart-sub">Full-data runs in the order they were trained.</p>
+    <div class="legend" id="legend"></div>
+    <div class="chart-wrap" id="chart-wrap"><div class="tooltip" id="tooltip"></div></div>
+    <details><summary>Table view</summary><div class="scroll" id="exp-table"></div></details>
+  </section>
+
+  <section class="card">
+    <h2>Attempts</h2>
+    <p class="sub">One run of the agent team. Select one to read its trace.</p>
+    <div class="scroll" id="attempts"></div>
+  </section>
+
+  <section class="card" id="trace-card" hidden>
+    <h2 id="trace-title">Trace</h2>
+    <p class="sub" id="trace-sub"></p>
+    <ul class="timeline" id="trace"></ul>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (v, d = 5) => (typeof v === 'number' ? v.toFixed(d) : '—');
+const time = (iso) => (iso ? new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—');
+const api = (path) => fetch(path).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${path}: ${r.status}`))));
+
+async function init() {
+  const comps = await api('/competitions');
+  const select = $('competition');
+  select.innerHTML = comps.map((c) => `<option>${esc(c)}</option>`).join('') || '<option>no experiments yet</option>';
+  let saved = null;
+  try { saved = localStorage.getItem('dashboard.competition'); } catch { /* storage unavailable */ }
+  const wanted = new URLSearchParams(location.search).get('competition') || saved;
+  if (wanted && comps.includes(wanted)) select.value = wanted;
+  select.addEventListener('change', () => {
+    try { localStorage.setItem('dashboard.competition', select.value); } catch { /* storage unavailable */ }
+    load(select.value);
+  });
+  if (comps.length) load(select.value);
+}
+
+async function load(comp) {
+  const [experiments, attempts] = await Promise.all([api(`/competitions/${comp}/experiments`), api(`/attempts?competition=${comp}`)]);
+  const full = experiments.filter((e) => e.config.sample_frac === 1);
+  renderTiles(full, attempts);
+  // The live leaderboard comes from Kaggle (a few seconds); until then, and if it
+  // fails, the tile shows the position recorded by the latest attempt.
+  api(`/competitions/${comp}/leaderboard`).then((lb) => {
+    if ($('competition').value !== comp || !lb.rank) return;
+    setTile('leaderboard', `top ${lb.top_percent}%`,
+      `rank ${lb.rank} / ${lb.teams} · best public ${lb.best_public_score} · top 20% at ${lb.top20_threshold}`);
+  }).catch(() => {});
+  renderChart(full);
+  renderExperimentTable(full);
+  renderAttempts(attempts);
+  $('trace-card').hidden = true;
+}
+
+function bestOf(runs) {
+  if (!runs.length) return null;
+  const higher = runs[0].higher_is_better;
+  return runs.reduce((a, b) => ((higher ? b.cv_score > a.cv_score : b.cv_score < a.cv_score) ? b : a));
+}
+
+function renderTiles(full, attempts) {
+  const best = bestOf(full);
+  const bestAgents = bestOf(full.filter((e) => e.attempt_id));
+  const placed = attempts.find((a) => a.summary && a.summary.rank);
+  const tiles = [
+    { label: 'Best CV (any run)', value: fmt(best?.cv_score), note: best ? `${best.metric} · ${best.run_id}` : 'no full-data run yet' },
+    { label: 'Best CV by the agents', value: fmt(bestAgents?.cv_score), note: bestAgents ? bestAgents.run_id : 'no agent run yet' },
+    { id: 'leaderboard', label: 'Public leaderboard (best submission)', value: placed ? `top ${placed.summary.top_percent}%` : '—',
+      note: placed ? `rank ${placed.summary.rank} / ${placed.summary.teams} · from an attempt; checking Kaggle…` : 'checking Kaggle…' },
+    { label: 'Attempts', value: attempts.length,
+      note: ['completed', 'failed', 'orphaned'].map((s) => `${attempts.filter((a) => a.status === s).length} ${s}`).join(' · ') },
+  ];
+  $('tiles').innerHTML = tiles.map((t) => `<div class="tile"${t.id ? ` id="tile-${t.id}"` : ''}><div class="label">${esc(t.label)}</div>
+    <div class="value">${esc(t.value)}</div><div class="note">${esc(t.note)}</div></div>`).join('');
+}
+
+function setTile(id, value, note) {
+  const tile = $(`tile-${id}`);
+  if (!tile) return;
+  tile.querySelector('.value').textContent = value;
+  tile.querySelector('.note').textContent = note;
+}
+
+const MARK = {
+  agents: (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="var(--series-agents)" stroke="var(--surface-1)" stroke-width="2"/>`,
+  manual: (x, y) => `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" rx="1.5" fill="var(--series-manual)" stroke="var(--surface-1)" stroke-width="2"/>`,
+};
+
+function renderChart(full) {
+  const wrap = $('chart-wrap');
+  wrap.querySelector('svg')?.remove();
+  $('legend').innerHTML = `
+    <span><svg width="12" height="12">${MARK.agents(6, 6)}</svg>Run by the agents</span>
+    <span><svg width="12" height="12">${MARK.manual(6, 6)}</svg>Baseline or manual check</span>
+    <span><svg width="18" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--best-line)" stroke-width="2" stroke-dasharray="4 3"/></svg>Best so far</span>`;
+  if (!full.length) { wrap.insertAdjacentHTML('beforeend', '<p class="empty">No full-data runs yet.</p>'); return; }
+
+  const W = 1000, H = 300, m = { l: 64, r: 16, t: 12, b: 32 };
+  const higher = full[0].higher_is_better;
+  const scores = full.map((e) => e.cv_score);
+  let lo = Math.min(...scores), hi = Math.max(...scores);
+  const pad = (hi - lo || Math.abs(hi) * 0.01 || 1) * 0.12;
+  lo -= pad; hi += pad;
+  const x = (i) => m.l + (full.length === 1 ? (W - m.l - m.r) / 2 : (i * (W - m.l - m.r)) / (full.length - 1));
+  const y = (v) => m.t + ((hi - v) * (H - m.t - m.b)) / (hi - lo);
+
+  const ticks = Array.from({ length: 5 }, (_, i) => lo + ((hi - lo) * i) / 4);
+  const digits = hi - lo < 0.01 ? 4 : 3;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="CV score of each full-data run">`;
+  svg += ticks.map((t) => `<line x1="${m.l}" x2="${W - m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>
+    <text x="${m.l - 8}" y="${y(t) + 4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${t.toFixed(digits)}</text>`).join('');
+  svg += `<text x="${m.l}" y="${H - 8}" font-size="11" fill="var(--text-muted)">first run</text>
+          <text x="${W - m.r}" y="${H - 8}" text-anchor="end" font-size="11" fill="var(--text-muted)">latest run</text>`;
+
+  let best = null;
+  const steps = full.map((e, i) => {
+    if (best === null || (higher ? e.cv_score > best : e.cv_score < best)) best = e.cv_score;
+    return `${i ? 'L' : 'M'}${x(i)},${y(best)}`;
+  });
+  svg += `<path d="${steps.join(' ')}" fill="none" stroke="var(--best-line)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  svg += full.map((e, i) => MARK[e.attempt_id ? 'agents' : 'manual'](x(i), y(e.cv_score))).join('');
+  svg += full.map((e, i) => `<rect class="hit" data-i="${i}" x="${x(i) - 10}" y="${m.t}" width="20" height="${H - m.t - m.b}" fill="transparent"/>`).join('');
+  svg += '</svg>';
+  wrap.insertAdjacentHTML('beforeend', svg);
+
+  const tip = $('tooltip');
+  wrap.querySelectorAll('.hit').forEach((el) => {
+    el.addEventListener('mouseenter', () => {
+      const e = full[+el.dataset.i];
+      tip.innerHTML = `<b>${fmt(e.cv_score)}</b> ${esc(e.metric)} ± ${fmt(e.cv_std)}<br>${esc(describe(e))}<br>
+        <span style="color:var(--text-muted)">${esc(e.run_id)}${e.attempt_id ? ' · attempt ' + esc(e.attempt_id) : ' · manual'}</span>`;
+      tip.style.display = 'block';
+      const box = wrap.getBoundingClientRect(), r = el.getBoundingClientRect();
+      const left = r.left - box.left + r.width / 2 + 12;
+      tip.style.left = `${Math.min(left, box.width - tip.offsetWidth - 4)}px`;
+      tip.style.top = '8px';
+    });
+    el.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}
+
+function describe(e) {
+  const c = e.config;
+  if (c.model === 'blend') return `blend of ${c.blend_runs.length} runs`;
+  const f = c.features || {};
+  const parts = [c.model, Object.entries(c.params || {}).map(([k, v]) => `${k}=${v}`).join(' ')];
+  for (const [key, label] of [['frequency_encode', 'freq'], ['target_encode', 'TE'], ['digit_features', 'digits'], ['as_category', 'cat']]) {
+    if (f[key]?.length) parts.push(`${label}: ${f[key].join(', ')}`);
+  }
+  if (c.external_data?.length) parts.push(`+ external data`);
+  return parts.filter(Boolean).join(' · ');
+}
+
+function renderExperimentTable(full) {
+  $('exp-table').innerHTML = `<table><thead><tr><th>#</th><th>Run</th><th>By</th><th>Configuration</th><th>CV</th><th>± std</th></tr></thead><tbody>
+    ${full.map((e, i) => `<tr><td class="num">${i + 1}</td><td>${esc(e.run_id)}</td><td>${e.attempt_id ? 'agents' : 'manual'}</td>
+      <td>${esc(describe(e))}</td><td class="num">${fmt(e.cv_score)}</td><td class="num">${fmt(e.cv_std)}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function renderAttempts(attempts) {
+  if (!attempts.length) { $('attempts').innerHTML = '<p class="empty">No attempts yet.</p>'; return; }
+  $('attempts').innerHTML = `<table><thead><tr><th>Started</th><th>Status</th><th>Iterations</th><th>Best CV</th><th>Leaderboard</th><th>Outcome</th></tr></thead><tbody>
+    ${attempts.map((a) => {
+      const s = a.summary || {};
+      const outcome = a.status === 'completed' ? s.stop_reason || '' : `${s.failed_node ? s.failed_node + ': ' : ''}${s.error || ''}`;
+      return `<tr class="clickable" data-id="${esc(a.attempt_id)}"><td class="num">${time(a.started_at)}</td>
+        <td><span class="status ${esc(a.status)}">${esc(a.status)}</span></td>
+        <td class="num">${s.iterations ?? '—'}</td><td class="num">${fmt(s.best_run?.cv_score ?? s.cv_score)}</td>
+        <td class="num">${s.top_percent ? `top ${s.top_percent}%` : '—'}</td><td>${esc(outcome).slice(0, 160)}</td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+  $('attempts').querySelectorAll('tr.clickable').forEach((row) => row.addEventListener('click', () => {
+    $('attempts').querySelectorAll('tr.selected').forEach((r) => r.classList.remove('selected'));
+    row.classList.add('selected');
+    showTrace(row.dataset.id);
+  }));
+}
+
+function summarizeEvent(e) {
+  const c = e.content;
+  if (e.agent === 'guardrails') {
+    const adj = c.adjustments || [];
+    return adj.length ? adj.map((a) => `<div class="adj">⚠ ${esc(a)}</div>`).join('') : 'Agent output accepted as is';
+  }
+  if (e.agent === 'worker') {
+    if (e.kind === 'tool_call') return `call <b>${esc(c.tool)}</b>`;
+    if (e.kind === 'error') return `<span class="adj">${esc(c.tool ? c.tool + ': ' : '')}${esc(c.error)}</span>`;
+    const r = c.result || {};
+    if (c.tool === 'train') return `<b>${esc(c.tool)}</b> → ${esc(r.metric)} ${fmt(r.cv_score)} (${esc(r.run_id)})`;
+    if (c.tool === 'submit') return `<b>submit</b> → public ${esc(r.public_score)}`;
+    if (c.tool === 'leaderboard') return `<b>leaderboard</b> → rank ${esc(r.rank)} / ${esc(r.teams)} (top ${esc(r.top_percent)}%)`;
+    if (c.tool === 'discover_external') return `<b>discover_external</b> → accepted ${esc((r.accepted || []).map((d) => d.name).join(', ') || 'none')}`;
+    return `<b>${esc(c.tool)}</b> done`;
+  }
+  if (e.agent === 'orchestrator' && c && c.iteration) {
+    return c.skipped ? `iteration ${c.iteration} skipped: ${esc(c.skipped)}`
+      : `iteration ${c.iteration}: CV ${fmt(c.cv_score)} · ${esc(c.verdict)}${c.submitted ? ` · submitted (public ${c.public_score})` : ''}`;
+  }
+  if (e.kind === 'decision') {
+    const brief = Object.entries(c || {}).filter(([k]) => k !== 'reasoning')
+      .map(([k, v]) => `${k}: ${Array.isArray(v) ? (v.length ? v.join(', ') : '[]') : typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ');
+    return `${esc(brief).slice(0, 400)}${e.reasoning ? `<div class="reason">${esc(e.reasoning)}</div>` : ''}`;
+  }
+  return esc(JSON.stringify(c)).slice(0, 300);
+}
+
+async function showTrace(id) {
+  const a = await api(`/attempts/${id}`);
+  $('trace-card').hidden = false;
+  $('trace-title').textContent = `Trace · ${a.attempt_id}`;
+  $('trace-sub').textContent = `${a.status} · ${a.events.length} events · started ${time(a.started_at)}`;
+  $('trace').innerHTML = a.events.map((e) => {
+    const meta = e.meta ? ` · ${e.meta.model} · ${e.meta.llm_attempts} LLM call${e.meta.llm_attempts > 1 ? 's' : ''} · ${(e.meta.elapsed_ms / 1000).toFixed(1)}s` : '';
+    const extra = [
+      e.context ? `<details><summary>Context the agent saw</summary><pre>${esc(JSON.stringify(e.context, null, 2))}</pre></details>` : '',
+      e.content?.traceback ? `<details><summary>Traceback</summary><pre>${esc(e.content.traceback)}</pre></details>` : '',
+      `<details><summary>Raw event</summary><pre>${esc(JSON.stringify(e.content, null, 2))}</pre></details>`,
+    ].join('');
+    return `<li class="${esc(e.kind)}"><div class="ev-head"><span class="ev-agent">${esc(e.agent)}</span>
+      <span class="ev-meta">${esc(e.kind)} · ${new Date(e.ts).toLocaleTimeString()}${esc(meta)}</span></div>
+      <div class="ev-body">${summarizeEvent(e)}</div>${extra}</li>`;
+  }).join('');
+  $('trace-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+init().catch((err) => { document.querySelector('main').insertAdjacentHTML('beforeend', `<p class="empty">Could not load: ${esc(err.message)}</p>`); });
+</script>
+</body>
+</html>

@@ -94,3 +94,11 @@ def test_leaderboard_position_reads_direction_from_ordering(scores, mine, rank):
 def test_missing_data_is_a_clear_error(data_root):
     with pytest.raises(ValueError, match="Download the competition first"):
         profiling.load("never-downloaded")
+
+
+def test_dashboard_and_competition_list(client):
+    assert client.get("/competitions").json() == []
+    client.post("/competitions/binary-comp/train", json={"metric": "roc_auc", "params": FAST, "n_folds": 2})
+    assert client.get("/competitions").json() == ["binary-comp"]
+    page = client.get("/dashboard")
+    assert page.status_code == 200 and "<title>" in page.text
