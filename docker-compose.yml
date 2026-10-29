@@ -1,0 +1,32 @@
+services:
+  # Execution layer: Kaggle I/O, profiling, CV training, attempt trace.
+  worker:
+    build: ./worker
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/workspace/data
+      - ./runs:/workspace/runs
+
+  # Orchestration layer: the agent team, one workflow per role.
+  n8n:
+    image: n8nio/n8n:2.44.0
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Sao_Paulo
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_SECURE_COOKIE=false
+      - WORKER_URL=http://worker:8000
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+      - GROQ_MODEL=${GROQ_MODEL:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows:ro
+    depends_on:
+      - worker
+
+volumes:
+  n8n_data:
