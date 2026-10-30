@@ -208,8 +208,8 @@ docker compose run --rm worker python -m scripts.baseline --competition <slug> -
 ### Tests
 
 ```bash
-docker compose run --rm worker pytest -q    # worker: tools, training, trace (29 tests)
-node --test n8n/tests/*.test.js             # Orchestrator guardrails, loop control, model fallback (20 tests)
+docker compose run --rm worker pytest -q    # worker: tools, training, trace (30 tests)
+node --test n8n/tests/*.test.js             # Orchestrator guardrails, loop control, model fallback (21 tests)
 ```
 
 The worker tests use small synthetic competitions (binary, regression, top-k

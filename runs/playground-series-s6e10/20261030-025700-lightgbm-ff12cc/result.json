@@ -1,0 +1,125 @@
+{
+  "run_id": "20261030-025700-lightgbm-ff12cc",
+  "attempt_id": "20261030-024445-250a92",
+  "competition": "playground-series-s6e10",
+  "created_at": "2026-10-30T02:57:01.916811+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9581572653434063,
+  "cv_std": 0.0006357881064247003,
+  "fold_scores": [
+    0.9582781811387493,
+    0.9569800568569602,
+    0.9588648684892939,
+    0.9581877633653277,
+    0.9585025280839106
+  ],
+  "best_iterations": [
+    480,
+    471,
+    450,
+    425,
+    353
+  ],
+  "train_rows": 699635,
+  "n_features": 21,
+  "top_features": [
+    {
+      "feature": "Age",
+      "importance": 4977.0
+    },
+    {
+      "feature": "Flight Distance",
+      "importance": 4973.8
+    },
+    {
+      "feature": "Baggage handling",
+      "importance": 1697.4
+    },
+    {
+      "feature": "Arrival Delay in Minutes",
+      "importance": 1494.2
+    },
+    {
+      "feature": "Inflight wifi service",
+      "importance": 1440.6
+    },
+    {
+      "feature": "Departure Delay in Minutes",
+      "importance": 1227.2
+    },
+    {
+      "feature": "Class",
+      "importance": 1065.0
+    },
+    {
+      "feature": "Online boarding",
+      "importance": 930.4
+    },
+    {
+      "feature": "Checkin service",
+      "importance": 921.2
+    },
+    {
+      "feature": "Gate location",
+      "importance": 825.0
+    },
+    {
+      "feature": "Departure/Arrival time convenient",
+      "importance": 821.0
+    },
+    {
+      "feature": "On-board service",
+      "importance": 806.2
+    },
+    {
+      "feature": "Ease of Online booking",
+      "importance": 798.4
+    },
+    {
+      "feature": "Seat comfort",
+      "importance": 795.2
+    },
+    {
+      "feature": "Inflight entertainment",
+      "importance": 718.2
+    }
+  ],
+  "duration_s": 97.6,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [
+        "Age",
+        "Inflight wifi service",
+        "Departure/Arrival time convenient",
+        "Ease of Online booking",
+        "Gate location",
+        "Food and drink",
+        "Online boarding",
+        "Seat comfort",
+        "Inflight entertainment",
+        "On-board service",
+        "Leg room service",
+        "Checkin service",
+        "Cleanliness"
+      ],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [
+      "teejmahal20__airline-passenger-satisfaction"
+    ],
+    "blend_runs": [],
+    "note": "iteration 4: Convert numeric columns with <=100 unique values to categorical features."
+  }
+}

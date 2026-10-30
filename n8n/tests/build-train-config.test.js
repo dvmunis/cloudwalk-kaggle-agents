@@ -13,12 +13,13 @@ const run = (id, extra) => ({
   blendable: true, cv_score: 0.9, ...extra,
 });
 
-function guard({ data = {}, modeling = {}, runs = [], best, accepted = [], metric = 'roc_auc' } = {}) {
+function guard({ data = {}, modeling = {}, runs = [], best, accepted = [], metric = 'roc_auc', nExperiments } = {}) {
   return runNode('build-train-config.js', {
     'Profile data': profile,
     Planner: { metric },
     'Iteration context': { iteration: 1, plan: { focus: 'test' } },
-    'Refresh history': { best_full_data_run: best ?? null, best_full_data_model_run: best ?? null, recent: runs },
+    'Refresh history': { best_full_data_run: best ?? null, best_full_data_model_run: best ?? null, recent: runs,
+      n_experiments: nExperiments ?? runs.length + 1 },
     'Data agent': { ...FEATURES, ...data },
     'Modeling agent': { model: 'lightgbm', params: {}, blend_runs: [], ...modeling },
     'Read input': { sample_frac: 1 },
@@ -114,4 +115,18 @@ test('external data is limited to accepted datasets and counts as a feature chan
   assert.deepEqual(out.config.external_data, ['orig']);
   assert.deepEqual(out.config.params, { num_leaves: 127 });
   assert.ok(out.adjustments.some((a) => a.includes('unknown dataset random')));
+});
+
+test('the first run of a competition is the plain baseline, whatever the agents proposed', () => {
+  const out = guard({
+    nExperiments: 0,
+    data: { target_encode: ['income'], external_data: ['orig'] },
+    modeling: { model: 'xgboost', params: { max_depth: 8 } },
+    accepted: [{ name: 'orig' }],
+  });
+  assert.equal(out.config.model, 'xgboost');
+  assert.deepEqual(out.config.params, {});
+  assert.deepEqual(out.config.features.target_encode, []);
+  assert.deepEqual(out.config.external_data, []);
+  assert.match(out.adjustments[0], /baseline first/);
 });

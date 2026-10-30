@@ -59,6 +59,18 @@ const done = (config, duplicate) => [{
 }];
 const note = `iteration ${it.iteration}: ${it.plan.focus ?? ''}`;
 
+// The first run of a competition is the plain baseline (default params, no feature
+// changes, no external data): without it, whatever the agents add first cannot be
+// told apart from the model's own score.
+if (history.n_experiments === 0) {
+  const asked = modeling.model === 'xgboost' ? 'xgboost' : 'lightgbm';
+  adjustments.push(`no experiment yet in this competition: training the plain ${asked} baseline first, `
+    + 'so the proposed changes have a reference to be measured against');
+  return done({ metric, model: asked, params: {}, features: { drop: [], frequency_encode: [], as_category: [],
+    target_encode: [], digit_features: [], add_null_count: false }, external_data: [],
+  sample_frac: input.sample_frac, note: `${note} (baseline first)` }, null);
+}
+
 // A blend averages the predictions of earlier runs; only runs that saved their
 // predictions and were trained on the same rows can take part.
 const best = history.best_full_data_model_run;

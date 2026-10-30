@@ -1,0 +1,131 @@
+{
+  "run_id": "20261030-030838-lightgbm-7a4323",
+  "attempt_id": null,
+  "competition": "playground-series-s6e10",
+  "created_at": "2026-10-30T03:08:39.678769+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9597516951433726,
+  "cv_std": 0.0005982569013508397,
+  "fold_scores": [
+    0.9598430478111926,
+    0.9586851252757815,
+    0.9605275644757975,
+    0.9598153066032384,
+    0.9599475067214231
+  ],
+  "best_iterations": [
+    738,
+    544,
+    400,
+    518,
+    611
+  ],
+  "train_rows": 699635,
+  "n_features": 42,
+  "top_features": [
+    {
+      "feature": "Flight Distance_te",
+      "importance": 3112.2
+    },
+    {
+      "feature": "Flight Distance",
+      "importance": 2915.2
+    },
+    {
+      "feature": "Age_te",
+      "importance": 2157.2
+    },
+    {
+      "feature": "Age",
+      "importance": 2112.4
+    },
+    {
+      "feature": "Inflight wifi service_te",
+      "importance": 1320.8
+    },
+    {
+      "feature": "Gate location_te",
+      "importance": 1048.8
+    },
+    {
+      "feature": "Ease of Online booking_te",
+      "importance": 1033.2
+    },
+    {
+      "feature": "Checkin service_te",
+      "importance": 1026.4
+    },
+    {
+      "feature": "Online boarding_te",
+      "importance": 1025.2
+    },
+    {
+      "feature": "Leg room service_te",
+      "importance": 977.8
+    },
+    {
+      "feature": "Baggage handling_te",
+      "importance": 972.2
+    },
+    {
+      "feature": "Departure/Arrival time convenient_te",
+      "importance": 953.8
+    },
+    {
+      "feature": "Seat comfort_te",
+      "importance": 903.8
+    },
+    {
+      "feature": "On-board service_te",
+      "importance": 885.0
+    },
+    {
+      "feature": "Inflight wifi service",
+      "importance": 796.0
+    }
+  ],
+  "duration_s": 155.4,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Age",
+        "Flight Distance",
+        "Inflight wifi service",
+        "Departure/Arrival time convenient",
+        "Ease of Online booking",
+        "Gate location",
+        "Food and drink",
+        "Online boarding",
+        "Seat comfort",
+        "Inflight entertainment",
+        "On-board service",
+        "Leg room service",
+        "Baggage handling",
+        "Checkin service",
+        "Cleanliness",
+        "Departure Delay in Minutes",
+        "Arrival Delay in Minutes",
+        "Gender",
+        "Customer Type",
+        "Type of Travel",
+        "Class"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "manual s6e10: lightgbm + target encoding of every column"
+  }
+}

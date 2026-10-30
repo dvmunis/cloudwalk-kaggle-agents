@@ -56,5 +56,41 @@
     "title": "Airline Customer Satisfaction",
     "status": "rejected",
     "reason": "129880 of its rows are already in sjleshrac/airlines-customer-satisfaction"
+  },
+  "dmitriykolmikov/s6e10-catboost-all-categorical-oof-and-test": {
+    "ref": "dmitriykolmikov/s6e10-catboost-all-categorical-oof-and-test",
+    "title": "S6E10 CatBoost all-categorical OOF and test",
+    "status": "rejected",
+    "reason": "built from this competition's files"
+  },
+  "vijaikm/s6e10-downcasted-parquet-5fold": {
+    "ref": "vijaikm/s6e10-downcasted-parquet-5fold",
+    "title": "PS S6E10: Downcasted Parquet & 5-Fold Splits",
+    "status": "rejected",
+    "reason": "built from this competition's files"
+  },
+  "vijaikm/ps-s6e10-aligned-original-airline-satisfaction": {
+    "ref": "vijaikm/ps-s6e10-aligned-original-airline-satisfaction",
+    "title": "PS S6E10: Aligned Original Airline Benchmark",
+    "status": "rejected",
+    "reason": "built from this competition's files"
+  },
+  "divyanshucoder/cleaned-airline-dataset": {
+    "ref": "divyanshucoder/cleaned-airline-dataset",
+    "title": "Cleaned Airline Datset",
+    "status": "rejected",
+    "reason": "Clean_Airline_Data.csv: no 'satisfaction' column"
+  },
+  "mobeenfatimah/review-sentiment-dataset-50k-multidomain-reviews": {
+    "ref": "mobeenfatimah/review-sentiment-dataset-50k-multidomain-reviews",
+    "title": "Review Sentiment Dataset (50K MultiDomain Reviews)",
+    "status": "rejected",
+    "reason": "data_dictionary.csv: no 'satisfaction' column; reviews_dataset.csv: no 'satisfaction' column"
+  },
+  "chandana890/twitter-airline-sentiment-dataset": {
+    "ref": "chandana890/twitter-airline-sentiment-dataset",
+    "title": "Twitter Airline Sentiment Dataset",
+    "status": "rejected",
+    "reason": "Tweets.csv: no 'satisfaction' column"
   }
 }

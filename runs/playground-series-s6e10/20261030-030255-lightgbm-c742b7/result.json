@@ -1,0 +1,119 @@
+{
+  "run_id": "20261030-030255-lightgbm-c742b7",
+  "attempt_id": null,
+  "competition": "playground-series-s6e10",
+  "created_at": "2026-10-30T03:02:57.208416+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9600701369882856,
+  "cv_std": 0.0006460281627971647,
+  "fold_scores": [
+    0.9602070603657422,
+    0.9589166814814052,
+    0.960913971873131,
+    0.9602209048943471,
+    0.9601247199054692
+  ],
+  "best_iterations": [
+    561,
+    519,
+    519,
+    506,
+    548
+  ],
+  "train_rows": 699635,
+  "n_features": 29,
+  "top_features": [
+    {
+      "feature": "Flight Distance_te",
+      "importance": 3194.0
+    },
+    {
+      "feature": "Flight Distance",
+      "importance": 2947.0
+    },
+    {
+      "feature": "Flight Distance_freq",
+      "importance": 2731.4
+    },
+    {
+      "feature": "Age_te",
+      "importance": 2445.6
+    },
+    {
+      "feature": "Age",
+      "importance": 1809.4
+    },
+    {
+      "feature": "Inflight wifi service",
+      "importance": 1630.2
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 1409.0
+    },
+    {
+      "feature": "Arrival Delay in Minutes_te",
+      "importance": 1190.6
+    },
+    {
+      "feature": "Baggage handling",
+      "importance": 1158.6
+    },
+    {
+      "feature": "Checkin service",
+      "importance": 1126.8
+    },
+    {
+      "feature": "Online boarding",
+      "importance": 1126.0
+    },
+    {
+      "feature": "Departure Delay in Minutes_te",
+      "importance": 1028.0
+    },
+    {
+      "feature": "Seat comfort",
+      "importance": 1001.4
+    },
+    {
+      "feature": "On-board service",
+      "importance": 975.0
+    },
+    {
+      "feature": "Ease of Online booking",
+      "importance": 960.6
+    }
+  ],
+  "duration_s": 97.9,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Age",
+        "Flight Distance",
+        "Departure Delay in Minutes",
+        "Arrival Delay in Minutes"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Age",
+        "Flight Distance",
+        "Departure Delay in Minutes",
+        "Arrival Delay in Minutes"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "manual s6e10: lightgbm + frequency and target encoding of the many-valued numeric columns"
+  }
+}
