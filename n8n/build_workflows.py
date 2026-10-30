@@ -23,6 +23,9 @@ OUT_DIR = Path(__file__).parent / "workflows"
 CODE_DIR = Path(__file__).parent / "code"
 GROQ_CREDENTIAL = {"id": "kgGroqCredent01", "name": "Groq"}
 DEFAULT_MODEL = "openai/gpt-oss-120b"
+# Used once the primary model cannot serve this call any more (daily quota spent,
+# model withdrawn); separate quota on Groq's free tier.
+FALLBACK_MODEL = "openai/gpt-oss-20b"
 LLM_RETRIES = 4
 LLM_RETRY_WAIT_S = 30
 
@@ -221,12 +224,20 @@ def _connect(*names: str) -> dict:
     return {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(names, names[1:])}
 
 
+# Which model the next LLM call uses: the fallback once "Note failure" has seen the
+# primary model run out of daily quota (shared by the chat model and the trace).
+MODEL_EXPR = (f"($('Note failure').isExecuted && $('Note failure').last().json.use_fallback)"
+              f" ? ($env.GROQ_FALLBACK_MODEL || '{FALLBACK_MODEL}')"
+              f" : ($env.GROQ_MODEL || '{DEFAULT_MODEL}')")
+
+
 def build_agent(name: str, spec: dict) -> dict:
     title = spec["title"]
     nid = lambda node_name: _node_id(spec["id"], node_name)  # noqa: E731
     record_js = ((CODE_DIR / "decision-record.js").read_text()
                  .replace("__AGENT__", name).replace("__DEFAULT_MODEL__", DEFAULT_MODEL)
-                 .replace("__SYSTEM_CHARS__", str(len(f"{SHARED_RULES}\n\n{spec['system']}"))))
+                 .replace("__SYSTEM_CHARS__", str(len(f"{SHARED_RULES}\n\n{spec['system']}")))
+                .replace("__MODEL__", MODEL_EXPR))
     nodes = [
         {
             "name": "Input", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1.1,
@@ -253,7 +264,7 @@ def build_agent(name: str, spec: dict) -> dict:
             "name": "Groq Chat Model", "type": "@n8n/n8n-nodes-langchain.lmChatGroq", "typeVersion": 1,
             "position": [360, 220],
             "parameters": {
-                "model": f"={{{{ $env.GROQ_MODEL || '{DEFAULT_MODEL}' }}}}",
+                "model": f"={{{{ {MODEL_EXPR} }}}}",
                 "options": {"temperature": 0.2},
             },
             "credentials": {"groqApi": GROQ_CREDENTIAL},
@@ -272,8 +283,7 @@ def build_agent(name: str, spec: dict) -> dict:
             "name": "Return decision", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1180, 0],
             "parameters": {"jsCode": f"return [{{ json: $('{title} Agent').first().json.output }}];"},
         },
-        _code_text("Note failure", "// Counts failed LLM calls in this decision ($runIndex grows on each pass).\n"
-                   "return [{ json: { failures: $runIndex + 1, error: $json.error } }];", [700, 400]),
+        _code("Note failure", "note-failure.js") | {"position": [700, 400]},
         {
             "name": "Retry?", "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [940, 400],
             "parameters": {

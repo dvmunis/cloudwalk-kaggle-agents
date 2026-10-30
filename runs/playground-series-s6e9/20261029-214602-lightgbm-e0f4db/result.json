@@ -1,0 +1,117 @@
+{
+  "run_id": "20261029-214602-lightgbm-e0f4db",
+  "attempt_id": null,
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T21:46:03.653489+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9427890614402498,
+  "cv_std": 0.0006457670993686244,
+  "fold_scores": [
+    0.9419065048996748,
+    0.9425531161899945,
+    0.9438154450937565,
+    0.943170763391977,
+    0.9425608238192161
+  ],
+  "best_iterations": [
+    980,
+    722,
+    768,
+    553,
+    721
+  ],
+  "train_rows": 668665,
+  "n_features": 16,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 16574.2
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 15207.2
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 11556.2
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 10840.8
+    },
+    {
+      "feature": "Age",
+      "importance": 7960.4
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 7545.6
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 6620.6
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 5678.4
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 3455.4
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 2313.0
+    },
+    {
+      "feature": "City_Type",
+      "importance": 1588.4
+    },
+    {
+      "feature": "Gender",
+      "importance": 1479.6
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 1270.4
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 1090.6
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 673.6
+    }
+  ],
+  "duration_s": 235.9,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "learning_rate": 0.03,
+      "num_leaves": 127
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [
+      "itzzomkar__ev-adoption-behavior-and-range-anxiety"
+    ],
+    "blend_runs": [],
+    "note": "manual check of the external data tool"
+  }
+}

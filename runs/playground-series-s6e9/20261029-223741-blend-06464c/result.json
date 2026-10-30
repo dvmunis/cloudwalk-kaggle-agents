@@ -1,0 +1,60 @@
+{
+  "run_id": "20261029-223741-blend-06464c",
+  "attempt_id": null,
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T22:37:43.266995+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9455006733817166,
+  "cv_std": 0.0005930335818106357,
+  "fold_scores": [
+    0.9446753721516996,
+    0.9450819179634453,
+    0.9464055139856558,
+    0.945768037191031,
+    0.9456103655521323
+  ],
+  "best_iterations": [],
+  "train_rows": 668665,
+  "n_features": 0,
+  "top_features": [],
+  "blend": {
+    "method": "rank average",
+    "members": [
+      {
+        "run_id": "20261029-220450-lightgbm-43ff67",
+        "model": "lightgbm",
+        "cv_score": 0.9452679716186343
+      },
+      {
+        "run_id": "20261029-223503-xgboost-ae91b5",
+        "model": "xgboost",
+        "cv_score": 0.9455208269317006
+      }
+    ]
+  },
+  "duration_s": 2.6,
+  "config": {
+    "metric": "roc_auc",
+    "model": "blend",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [
+      "20261029-220450-lightgbm-43ff67",
+      "20261029-223503-xgboost-ae91b5"
+    ],
+    "note": "manual: blend of numeric target encoding runs"
+  }
+}

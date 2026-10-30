@@ -39,6 +39,8 @@ def test_attempt_records_agent_decisions_and_tool_calls(client, data_root):
     exported = data_root / "runs" / "binary-comp" / "attempts" / f"{attempt_id}.jsonl"
     assert len(exported.read_text().splitlines()) == len(kinds)
     assert json.loads(exported.read_text().splitlines()[0])["reasoning"] == "binary target, proba sample"
+    index = [json.loads(line) for line in exported.with_name("index.jsonl").read_text().splitlines()]
+    assert [(a["attempt_id"], a["status"]) for a in index] == [(attempt_id, "completed")]
 
     assert client.get("/attempts", params={"competition": "binary-comp"}).json()[0]["attempt_id"] == attempt_id
 

@@ -1,7 +1,14 @@
 .env
-data/
-runs/*
-!runs/.gitkeep
+# Competition data is Kaggle's and is re-downloaded by the worker; only the
+# external datasets the agents found (and their registry) are versioned.
+data/*/*
+!data/*/external/
+data/*/external/_downloads/
+# Run evidence is versioned (attempt traces, experiment log, per-run results,
+# leaderboard snapshots); the bulky per-run artifacts and the SQLite store are not.
+runs/trace.db
+runs/*/*/submission.csv
+runs/*/*/predictions.npz
 __pycache__/
 .pytest_cache/
 .venv/

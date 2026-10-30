@@ -1,0 +1,117 @@
+{
+  "run_id": "20261029-223503-xgboost-ae91b5",
+  "attempt_id": null,
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T22:35:05.176222+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9455208269317006,
+  "cv_std": 0.0005702090047840405,
+  "fold_scores": [
+    0.9447239720042784,
+    0.9451352776827153,
+    0.9464069503898331,
+    0.9457270593300775,
+    0.945641257745568
+  ],
+  "best_iterations": [
+    395,
+    325,
+    376,
+    302,
+    372
+  ],
+  "train_rows": 668665,
+  "n_features": 19,
+  "top_features": [
+    {
+      "feature": "Subsidy_Available",
+      "importance": 0.65
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 0.27
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 0.03
+    },
+    {
+      "feature": "Annual_Income_USD_te",
+      "importance": 0.02
+    },
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 0.01
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 0.0
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Age_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 0.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 0.0
+    },
+    {
+      "feature": "City_Type",
+      "importance": 0.0
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 0.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 0.0
+    }
+  ],
+  "duration_s": 95.6,
+  "config": {
+    "metric": "roc_auc",
+    "model": "xgboost",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "manual: xgboost + numeric target encoding, for blending"
+  }
+}

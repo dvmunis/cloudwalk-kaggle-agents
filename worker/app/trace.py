@@ -167,8 +167,13 @@ def list_attempts(competition: str | None = None) -> list[dict]:
 
 
 def _export_jsonl(attempt: dict) -> None:
-    path = settings.competition_runs_dir(attempt["competition"]) / "attempts" / f"{attempt['attempt_id']}.jsonl"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as f:
+    """Mirror a closed attempt into the run folder, so the evidence travels without trace.db:
+    its events as <attempt_id>.jsonl and one line per attempt (status, summary) in index.jsonl."""
+    folder = settings.competition_runs_dir(attempt["competition"]) / "attempts"
+    folder.mkdir(parents=True, exist_ok=True)
+    with (folder / f"{attempt['attempt_id']}.jsonl").open("w") as f:
         for event in attempt["events"]:
             f.write(json.dumps(event, default=str) + "\n")
+    with (folder / "index.jsonl").open("w") as f:
+        for row in reversed(list_attempts(attempt["competition"])):
+            f.write(json.dumps(row, default=str) + "\n")

@@ -1,0 +1,112 @@
+{
+  "run_id": "20261029-144349-lightgbm-9b3d56",
+  "attempt_id": "20261029-144027-208e94",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T14:43:50.291103+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9429019727719393,
+  "cv_std": 0.0006091767271761455,
+  "fold_scores": [
+    0.9419593603838978,
+    0.9426786776205731,
+    0.9437866087853166,
+    0.943265777474735,
+    0.942853046924669
+  ],
+  "best_iterations": [
+    633,
+    705,
+    803,
+    764,
+    739
+  ],
+  "train_rows": 668665,
+  "n_features": 16,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 16235.2
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 14724.6
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 11137.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 10371.0
+    },
+    {
+      "feature": "Age",
+      "importance": 7824.4
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 7452.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 6592.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 5573.2
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 3284.2
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 2250.4
+    },
+    {
+      "feature": "City_Type",
+      "importance": 1552.8
+    },
+    {
+      "feature": "Gender",
+      "importance": 1441.4
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 1240.2
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 1056.0
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 615.0
+    }
+  ],
+  "duration_s": 151.7,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "learning_rate": 0.03,
+      "num_leaves": 127
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "note": "iteration 1: learning_rate 0.03"
+  }
+}

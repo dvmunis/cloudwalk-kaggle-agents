@@ -1,0 +1,108 @@
+{
+  "shankarpriya2913/crop-and-soil-dataset": {
+    "ref": "shankarpriya2913/crop-and-soil-dataset",
+    "title": "Crop and Soil DataSet",
+    "status": "accepted",
+    "name": "shankarpriya2913__crop-and-soil-dataset",
+    "file": "data_core.csv",
+    "rows": 8000,
+    "columns": "8 of 8 features",
+    "sha256": "d2608ab87a3bf724d560a3bc46871c9a0ec4258f2894866563de61a03e126580",
+    "missing_columns": []
+  },
+  "miadul/fertilizer-recommendation-dataset": {
+    "ref": "miadul/fertilizer-recommendation-dataset",
+    "title": "Fertilizer Recommendation Dataset",
+    "status": "rejected",
+    "reason": "fertilizer_recommendation.csv: no 'Fertilizer Name' column"
+  },
+  "sabyasachhatterjee22/season-aware-wb-dataset-for-recomendation": {
+    "ref": "sabyasachhatterjee22/season-aware-wb-dataset-for-recomendation",
+    "title": "Season aware WB Dataset for Recomendation",
+    "status": "rejected",
+    "reason": "no CSV files"
+  },
+  "datcolabssnet/fertilizer-recommendation-dataset": {
+    "ref": "datcolabssnet/fertilizer-recommendation-dataset",
+    "title": "Fertilizer Recommendation Dataset",
+    "status": "rejected",
+    "reason": "Fertilizer_Recommendation_Dataset.csv: no 'Fertilizer Name' column"
+  },
+  "benin007/agricultural-crop-disease-fertilizer-dataset": {
+    "ref": "benin007/agricultural-crop-disease-fertilizer-dataset",
+    "title": "Agricultural Crop Disease Fertilizer Dataset",
+    "status": "rejected",
+    "reason": "Fertilizer_Database.csv: no 'Fertilizer Name' column"
+  },
+  "hamzmiscof/rice-fertilizer-recommendation-dataset": {
+    "ref": "hamzmiscof/rice-fertilizer-recommendation-dataset",
+    "title": "Rice Fertilizer Recommendation Dataset",
+    "status": "rejected",
+    "reason": "dataset-rekomendasi-pupuk-padi.csv: no 'Fertilizer Name' column"
+  },
+  "clarelaurent/three-suggestions-for-a-soil-table-data": {
+    "ref": "clarelaurent/three-suggestions-for-a-soil-table-data",
+    "title": "Three Suggestions for a Soil Table Data",
+    "status": "rejected",
+    "reason": "sample_submission.csv: only 0 of 8 feature columns; test.csv: no 'Fertilizer Name' column; train.csv: same number of rows as the competition files (likely a copy)"
+  },
+  "abdulmaliklodhra/global-food-production-and-crop-forecasting-dataset": {
+    "ref": "abdulmaliklodhra/global-food-production-and-crop-forecasting-dataset",
+    "title": "Global Food Production & Crop Forecasting Dataset",
+    "status": "rejected",
+    "reason": "climate_agriculture_factors_1961_2050.csv: no 'Fertilizer Name' column; crop_forecasts_2030_2040_2050.csv: no 'Fertilizer Name' column; crop_production_drivers.csv: no 'Fertilizer Name' column; data_dictionary.csv: no 'Fertilizer Name' column; global_crop_production_1961_2050.csv: no 'Fertilizer Name' column; methodology_and_sources.csv: no 'Fertilizer Name' column"
+  },
+  "samuelotiattakorah/agriculture-crop-yield": {
+    "ref": "samuelotiattakorah/agriculture-crop-yield",
+    "title": "Agriculture Crop Yield",
+    "status": "rejected",
+    "reason": "crop_yield.csv: no 'Fertilizer Name' column"
+  },
+  "irakozekelly/fertilizer-prediction": {
+    "ref": "irakozekelly/fertilizer-prediction",
+    "title": "Fertilizer prediction",
+    "status": "accepted",
+    "name": "irakozekelly__fertilizer-prediction",
+    "file": "Fertilizer Prediction.csv",
+    "rows": 100000,
+    "columns": "8 of 8 features",
+    "sha256": "9e67fc132ee487f54a12723db43e538aa592419c4cf2de7576689f2f1dc10f70",
+    "missing_columns": []
+  },
+  "atharvasoundankar/smart-farming-sensor-data-for-yield-prediction": {
+    "ref": "atharvasoundankar/smart-farming-sensor-data-for-yield-prediction",
+    "title": "\ud83c\udf3e Smart Farming Sensor Data for Yield Prediction",
+    "status": "rejected",
+    "reason": "Smart_Farming_Crop_Yield_2024.csv: no 'Fertilizer Name' column"
+  },
+  "govindaramsriram/crop-yield-of-a-farm": {
+    "ref": "govindaramsriram/crop-yield-of-a-farm",
+    "title": "Crop Yield of a Farm",
+    "status": "rejected",
+    "reason": "crop_yield_data.csv: no 'Fertilizer Name' column"
+  },
+  "varshitanalluri/crop-recommendation-dataset": {
+    "ref": "varshitanalluri/crop-recommendation-dataset",
+    "title": "Crop Recommendation Dataset",
+    "status": "rejected",
+    "reason": "Crop_Recommendation.csv: no 'Fertilizer Name' column"
+  },
+  "suraj520/agricultural-data-for-rajasthan-india-2018-2019": {
+    "ref": "suraj520/agricultural-data-for-rajasthan-india-2018-2019",
+    "title": "Agricultural Data for Rajasthan, India (2018-2019)",
+    "status": "rejected",
+    "reason": "crop_price_data.csv: no 'Fertilizer Name' column; crop_production_data.csv: no 'Fertilizer Name' column; soil_analysis_data.csv: no 'Fertilizer Name' column; water_usage_data.csv: no 'Fertilizer Name' column"
+  },
+  "niladriroy0/agro-environmental-dataset": {
+    "ref": "niladriroy0/agro-environmental-dataset",
+    "title": "Agro-Environmental Stress & Failure Simulation",
+    "status": "rejected",
+    "reason": "agro_environmental_dataset.csv: no 'Fertilizer Name' column"
+  },
+  "madhankumar789/crop-yield-and-environmental-factors-2014-2023": {
+    "ref": "madhankumar789/crop-yield-and-environmental-factors-2014-2023",
+    "title": "Crop Yield and Environmental Factors ",
+    "status": "rejected",
+    "reason": "crop_yield_dataset.csv: no 'Fertilizer Name' column"
+  }
+}

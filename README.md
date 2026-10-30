@@ -100,11 +100,12 @@ target, task type and submission format from `train.csv`, `test.csv` and
 
 | Event | Carries |
 |---|---|
-| Agent decision | the decision and its `reasoning`; `context`: the full input the agent saw; `meta`: model, LLM attempts (retries after rate limits), elapsed time and prompt size in characters. Token counts stay inside n8n's LangChain sub-node, which workflow code cannot read |
+| Agent decision | the decision and its `reasoning`; `context`: the full input the agent saw; `meta`: model (and why, if the fallback model answered), LLM attempts (retries after rate limits), elapsed time and prompt size in characters. Token counts stay inside n8n's LangChain sub-node, which workflow code cannot read |
 | Worker tool call | every call made with an `X-Attempt-Id` header: arguments, then the result or the error. Unexpected errors (bugs, not agent mistakes) also keep their traceback |
 | Guardrails, iterations | each correction applied to the agents' output, and each iteration's record and stop decision |
 
-On finish, the attempt is exported to `runs/<competition>/attempts/<attempt_id>.jsonl`.
+On finish, the attempt is exported to `runs/<competition>/attempts/<attempt_id>.jsonl`,
+and `attempts/index.jsonl` lists every attempt with its status and summary.
 Trace writes are retried, so a short worker outage does not lose a decision or
 end the attempt. If the orchestrator dies without reporting (n8n restarted, the
 error workflow failed), the attempt is closed as `orphaned` once it has had no
@@ -165,7 +166,25 @@ curl -s localhost:8000/attempts/<attempt_id> | python3 -m json.tool  # full trac
 
 Each step is also visible in n8n under **Executions**.
 
+**Evidence in this repository.** Everything behind the results below is
+versioned, so it can be checked without running the stack:
+
+| Path | What it proves |
+|---|---|
+| `runs/<comp>/attempts/*.jsonl`, `index.jsonl` | every attempt's trace: decisions, reasoning, context, guardrails, tool calls |
+| `runs/<comp>/experiments.jsonl` | every training run: config, CV and fold scores, who asked for it |
+| `runs/<comp>/<run_id>/result.json` | each run's result |
+| `runs/<comp>/_leaderboard/*.csv` | the public leaderboard snapshots used for positions and cut-offs |
+| `data/<comp>/external/` | the external datasets the agents found, with `registry.json` (accepted and rejected, and why) |
+
+Left out: `submission.csv` and `predictions.npz` per run (about 600 MB, rebuilt by
+training) and `trace.db` (mirrored by the JSONL files). The competition data is
+Kaggle's and its rules do not allow redistribution; the worker downloads it again
+on the first run.
+
 ### Dashboard
+
+![Dashboard: s6e9 runs against the leaderboard cut-offs](docs/dashboard.png)
 
 Open **http://localhost:8000/dashboard**. Served by the worker, it reads the same
 API and shows, per competition:
@@ -190,7 +209,7 @@ docker compose run --rm worker python -m scripts.baseline --competition <slug> -
 
 ```bash
 docker compose run --rm worker pytest -q    # worker: tools, training, trace (29 tests)
-node --test n8n/tests/*.test.js             # Orchestrator guardrails and loop control (15 tests)
+node --test n8n/tests/*.test.js             # Orchestrator guardrails, loop control, model fallback (20 tests)
 ```
 
 The worker tests use small synthetic competitions (binary, regression, top-k
@@ -230,9 +249,13 @@ Top-20% threshold on the public leaderboard: 0.9464. Agents run on Groq
 **Groq free-tier budget.** `gpt-oss-120b` allows 8,000 tokens per minute and
 200,000 per day. An iteration makes four LLM calls of about 4–5k tokens each, so
 one attempt of three iterations uses roughly 60k tokens: about three attempts
-per day. The agents wait and retry on the per-minute limit; when the daily limit
-is reached, set `GROQ_MODEL=openai/gpt-oss-20b` (separate quota) and rerun
-`./scripts/setup.sh`.
+per day. The agents wait 30 seconds and retry on a rate limit. If the limit is
+still there after the wait, it is the daily one (the per-minute window has
+passed), and the agent switches to `openai/gpt-oss-20b`, which has its own quota,
+for the rest of that decision; a missing model switches at once. n8n passes only
+its own summary of the Groq error to the workflow, so the rule reads persistence
+rather than Groq's message. The trace records which model answered and why. Both
+models can be changed with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL`.
 
 ### What the first traces taught us
 

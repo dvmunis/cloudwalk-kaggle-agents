@@ -1,0 +1,119 @@
+{
+  "run_id": "20261029-220450-lightgbm-43ff67",
+  "attempt_id": null,
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T22:04:51.718622+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9452679716186343,
+  "cv_std": 0.0006192971860165868,
+  "fold_scores": [
+    0.9443959580572734,
+    0.9448321865097379,
+    0.946184434586544,
+    0.945615011658272,
+    0.9453535806673252
+  ],
+  "best_iterations": [
+    291,
+    261,
+    288,
+    268,
+    288
+  ],
+  "train_rows": 668665,
+  "n_features": 19,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD_te",
+      "importance": 4863.2
+    },
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 4424.6
+    },
+    {
+      "feature": "Daily_Commute_km_te",
+      "importance": 4019.8
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 3856.8
+    },
+    {
+      "feature": "Age_te",
+      "importance": 3345.0
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 2355.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 2299.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 1541.4
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 1497.0
+    },
+    {
+      "feature": "Age",
+      "importance": 1439.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 1411.8
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 1050.8
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 904.4
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 511.8
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 416.4
+    }
+  ],
+  "duration_s": 138.6,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "learning_rate": 0.03,
+      "num_leaves": 127
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "target_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "manual check: target encoding of numeric columns"
+  }
+}

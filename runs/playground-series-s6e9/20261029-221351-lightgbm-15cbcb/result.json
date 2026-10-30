@@ -1,0 +1,122 @@
+{
+  "run_id": "20261029-221351-lightgbm-15cbcb",
+  "attempt_id": "20261029-220613-26a3c7",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T22:13:52.706386+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9452055543658429,
+  "cv_std": 0.000587806799865458,
+  "fold_scores": [
+    0.9443877109647295,
+    0.9448386846579371,
+    0.9461198144360374,
+    0.9455025807384712,
+    0.9452281410382353
+  ],
+  "best_iterations": [
+    347,
+    284,
+    291,
+    256,
+    362
+  ],
+  "train_rows": 668665,
+  "n_features": 19,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD_te",
+      "importance": 5183.8
+    },
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 4816.2
+    },
+    {
+      "feature": "Daily_Commute_km_te",
+      "importance": 4346.8
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 4261.8
+    },
+    {
+      "feature": "Age_te",
+      "importance": 3670.4
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 2698.6
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 2683.8
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 1734.0
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 1710.2
+    },
+    {
+      "feature": "Age",
+      "importance": 1646.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 1589.0
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 1139.4
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 961.0
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 562.0
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 436.8
+    }
+  ],
+  "duration_s": 144.8,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "learning_rate": 0.03,
+      "num_leaves": 127
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "external_data": [
+      "itzzomkar__ev-adoption-behavior-and-range-anxiety"
+    ],
+    "blend_runs": [],
+    "note": "iteration 2: Add the external dataset to a LightGBM run with the current best features (frequency\u2011encode numeric columns and numeric target encoding)."
+  }
+}

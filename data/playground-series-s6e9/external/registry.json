@@ -1,0 +1,103 @@
+{
+  "itzzomkar/ev-adoption-behavior-and-range-anxiety": {
+    "ref": "itzzomkar/ev-adoption-behavior-and-range-anxiety",
+    "title": "EV Adoption Behavior and Range Anxiety",
+    "status": "accepted",
+    "name": "itzzomkar__ev-adoption-behavior-and-range-anxiety",
+    "file": "EV_Adoption_and_Range_Anxiety_Dataset.csv",
+    "rows": 10000,
+    "columns": "13 of 13 features",
+    "sha256": "01dfef3ff048506aa585ebb701cd16dc8c007cf0312788011ecd2ee6c75b0c4f",
+    "missing_columns": []
+  },
+  "rameezmeerasahib/electric-vehicle-ev-sales-and-adoption": {
+    "ref": "rameezmeerasahib/electric-vehicle-ev-sales-and-adoption",
+    "title": "Electric Vehicle (EV) Sales and Adoption \ud83c\udf0d\ud83d\ude97\u26a1",
+    "status": "rejected",
+    "reason": "test.csv: no 'Will_Buy_EV' column; train.csv: no 'Will_Buy_EV' column"
+  },
+  "surajshivakumar/ev-adoption-usa": {
+    "ref": "surajshivakumar/ev-adoption-usa",
+    "title": "EV Adoption USA",
+    "status": "rejected",
+    "reason": "EV_Data.csv: no 'Will_Buy_EV' column"
+  },
+  "roshaank20/ev-adoption-behaviour": {
+    "ref": "roshaank20/ev-adoption-behaviour",
+    "title": "EV Adoption Behaviour",
+    "status": "rejected",
+    "reason": "same rows as itzzomkar/ev-adoption-behavior-and-range-anxiety"
+  },
+  "jainaru/electric-car-sales-2010-2024": {
+    "ref": "jainaru/electric-car-sales-2010-2024",
+    "title": "Electric car sales (2010-2024)",
+    "status": "rejected",
+    "reason": "IEA-EV-dataEV salesHistoricalCars.csv: no 'Will_Buy_EV' column"
+  },
+  "sahirmaharajj/electric-vehicle-population": {
+    "ref": "sahirmaharajj/electric-vehicle-population",
+    "title": "Full Electric Vehicle Dataset 2024",
+    "status": "rejected",
+    "reason": "Electric_Vehicle_Population_Data.csv: no 'Will_Buy_EV' column"
+  },
+  "anhadmahajan06/s6e9-predicting-electric-vehicle-purchases": {
+    "ref": "anhadmahajan06/s6e9-predicting-electric-vehicle-purchases",
+    "title": "PS S6E9 || Predicting Electric Vehicle Purchases",
+    "status": "rejected",
+    "reason": "built from this competition's files"
+  },
+  "harshsingh2209/tesla-stock-pricing-20172022": {
+    "ref": "harshsingh2209/tesla-stock-pricing-20172022",
+    "title": "TESLA stock pricing (2017-2022)",
+    "status": "rejected",
+    "reason": "TSLA.csv: no 'Will_Buy_EV' column"
+  },
+  "thedevastator/california-residents-zev-attitudes": {
+    "ref": "thedevastator/california-residents-zev-attitudes",
+    "title": "California Residents' ZEV Attitudes",
+    "status": "rejected",
+    "reason": "CA_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; DE_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; MA_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; MD_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; NESCAUM_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; NJ_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; NY_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; OR_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column; WA_ZEV_Survey_12-07-20.csv: no 'Will_Buy_EV' column"
+  },
+  "saravananars/electric-vehicle1": {
+    "ref": "saravananars/electric-vehicle1",
+    "title": "electric_vehicle1",
+    "status": "rejected",
+    "reason": "ev_survey_data_100.csv: no 'Will_Buy_EV' column"
+  },
+  "rabieelkharoua/trucking-and-road-freight-in-europe-1999-2025": {
+    "ref": "rabieelkharoua/trucking-and-road-freight-in-europe-1999-2025",
+    "title": "Trucking and Road Freight in Europe (1999-2025)",
+    "status": "rejected",
+    "reason": "codes.csv: no 'Will_Buy_EV' column; data_dictionary.csv: no 'Will_Buy_EV' column; european_road_freight.csv: no 'Will_Buy_EV' column; european_road_freight_quickstart.csv: no 'Will_Buy_EV' column"
+  },
+  "carwagen/ai-in-the-central-european-automotive-sector": {
+    "ref": "carwagen/ai-in-the-central-european-automotive-sector",
+    "title": "AI in the Central European Automotive Sector",
+    "status": "rejected",
+    "reason": "car_brands.csv: unreadable: 'utf-8' codec can't decode byte 0x8a in position 18: invalid start byte; car_models.csv: no 'Will_Buy_EV' column; customers.csv: no 'Will_Buy_EV' column; vehicles.csv: unreadable: 'utf-8' codec can't decode byte 0xed in position 1867: invalid continuation byte"
+  },
+  "laveshjadon/ai-impact-on-students": {
+    "ref": "laveshjadon/ai-impact-on-students",
+    "title": "Impact of Ai on Students ",
+    "status": "rejected",
+    "reason": "ai_student_impact_dataset (1).csv: no 'Will_Buy_EV' column"
+  },
+  "melissamonfared/indicators-of-anxiety-or-depression": {
+    "ref": "melissamonfared/indicators-of-anxiety-or-depression",
+    "title": "Indicators of Anxiety or Depression",
+    "status": "rejected",
+    "reason": "Indicators_of_Anxiety_or_Depression.csv: no 'Will_Buy_EV' column"
+  },
+  "argonnxx/teen-mental-health": {
+    "ref": "argonnxx/teen-mental-health",
+    "title": "Teen Mental Health",
+    "status": "rejected",
+    "reason": "Teen_Mental_Health.csv: no 'Will_Buy_EV' column"
+  },
+  "bertnardomariouskono/social-media-and-mental-health": {
+    "ref": "bertnardomariouskono/social-media-and-mental-health",
+    "title": "Social Media & Mental Health",
+    "status": "rejected",
+    "reason": "social_media_mental_health.csv: no 'Will_Buy_EV' column"
+  }
+}

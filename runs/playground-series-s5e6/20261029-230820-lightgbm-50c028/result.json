@@ -1,0 +1,112 @@
+{
+  "run_id": "20261029-230820-lightgbm-50c028",
+  "attempt_id": "20261029-230634-c5c43b",
+  "competition": "playground-series-s5e6",
+  "created_at": "2026-10-29T23:08:21.698342+00:00",
+  "metric": "map@3",
+  "higher_is_better": true,
+  "cv_score": 0.2948622222222222,
+  "cv_std": 0.0032065565546660285,
+  "fold_scores": [
+    0.29648888888888886,
+    0.2905222222222222,
+    0.2972111111111111,
+    0.2915555555555555,
+    0.2985333333333333
+  ],
+  "best_iterations": [
+    60,
+    32,
+    57,
+    45,
+    58
+  ],
+  "train_rows": 75000,
+  "n_features": 22,
+  "top_features": [
+    {
+      "feature": "Phosphorous",
+      "importance": 2290.4
+    },
+    {
+      "feature": "Moisture",
+      "importance": 2234.6
+    },
+    {
+      "feature": "Nitrogen",
+      "importance": 2210.8
+    },
+    {
+      "feature": "Humidity",
+      "importance": 1833.8
+    },
+    {
+      "feature": "Potassium",
+      "importance": 1789.8
+    },
+    {
+      "feature": "Temparature",
+      "importance": 1532.6
+    },
+    {
+      "feature": "Crop Type_te0",
+      "importance": 818.8
+    },
+    {
+      "feature": "Crop Type_te4",
+      "importance": 776.6
+    },
+    {
+      "feature": "Crop Type_te3",
+      "importance": 755.0
+    },
+    {
+      "feature": "Crop Type_te1",
+      "importance": 743.2
+    },
+    {
+      "feature": "Crop Type_te2",
+      "importance": 742.6
+    },
+    {
+      "feature": "Soil Type_te2",
+      "importance": 675.0
+    },
+    {
+      "feature": "Crop Type_te5",
+      "importance": 666.8
+    },
+    {
+      "feature": "Crop Type_te6",
+      "importance": 666.6
+    },
+    {
+      "feature": "Soil Type_te0",
+      "importance": 656.2
+    }
+  ],
+  "duration_s": 63.1,
+  "config": {
+    "metric": "map@3",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Soil Type",
+        "Crop Type"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.1,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "iteration 1: add target encoding for Soil Type and Crop Type"
+  }
+}

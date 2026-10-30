@@ -1,0 +1,96 @@
+{
+  "run_id": "20261029-020833-lightgbm-635d83",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T02:08:34.187527+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9416596605302563,
+  "cv_std": 0.0007995296494226852,
+  "fold_scores": [
+    0.940326868198532,
+    0.9414709041465528,
+    0.942729457786027,
+    0.9421497309948962,
+    0.9416719299391384
+  ],
+  "best_iterations": [
+    222,
+    385,
+    282,
+    343,
+    390
+  ],
+  "train_rows": 668665,
+  "n_features": 13,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 5315.4
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 3906.0
+    },
+    {
+      "feature": "Age",
+      "importance": 2954.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 1931.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 1794.2
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 1141.2
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 661.0
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 624.2
+    },
+    {
+      "feature": "City_Type",
+      "importance": 402.2
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 392.0
+    },
+    {
+      "feature": "Gender",
+      "importance": 385.0
+    },
+    {
+      "feature": "Subsidy_Available",
+      "importance": 306.0
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 300.2
+    }
+  ],
+  "duration_s": 56.3,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "note": "baseline full data"
+  }
+}

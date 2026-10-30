@@ -1,0 +1,58 @@
+{
+  "run_id": "20261029-153421-blend-a663c0",
+  "attempt_id": null,
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T15:34:22.666184+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9431987073441821,
+  "cv_std": 0.0006932789024072192,
+  "fold_scores": [
+    0.9421448829201662,
+    0.9429784062578732,
+    0.9442679682676804,
+    0.9435102320923019,
+    0.9431346998719701
+  ],
+  "best_iterations": [],
+  "train_rows": 668665,
+  "n_features": 0,
+  "top_features": [],
+  "blend": {
+    "method": "rank average",
+    "members": [
+      {
+        "run_id": "20261029-153001-lightgbm-a4a191",
+        "model": "lightgbm",
+        "cv_score": 0.9428608965640808
+      },
+      {
+        "run_id": "20261029-152016-xgboost-419627",
+        "model": "xgboost",
+        "cv_score": 0.9430558129306912
+      }
+    ]
+  },
+  "duration_s": 2.3,
+  "config": {
+    "metric": "roc_auc",
+    "model": "blend",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 1.0,
+    "seed": 42,
+    "blend_runs": [
+      "20261029-153001-lightgbm-a4a191",
+      "20261029-152016-xgboost-419627"
+    ],
+    "note": "manual check of the blend tool"
+  }
+}

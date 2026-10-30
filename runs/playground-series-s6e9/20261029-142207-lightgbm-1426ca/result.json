@@ -1,0 +1,116 @@
+{
+  "run_id": "20261029-142207-lightgbm-1426ca",
+  "attempt_id": "20261029-141721-86287d",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T14:22:08.161872+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9399955515236559,
+  "cv_std": 0.001911445748192973,
+  "fold_scores": [
+    0.9361899274146674,
+    0.9410286538251753,
+    0.9408481821178231,
+    0.9408410068632461,
+    0.9411255483196566
+  ],
+  "best_iterations": [
+    127,
+    140,
+    129,
+    149,
+    130
+  ],
+  "train_rows": 133733,
+  "n_features": 16,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 3019.8
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 2743.4
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 2182.2
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 2124.0
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 1719.2
+    },
+    {
+      "feature": "Age",
+      "importance": 1673.4
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 952.8
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 681.6
+    },
+    {
+      "feature": "City_Type",
+      "importance": 407.0
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 395.2
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 311.6
+    },
+    {
+      "feature": "Gender",
+      "importance": 294.0
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 206.8
+    },
+    {
+      "feature": "Subsidy_Available",
+      "importance": 163.4
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 73.0
+    }
+  ],
+  "duration_s": 30.9,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "num_leaves": 127
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [
+        "Number_of_Cars_Owned",
+        "Charging_Stations_Near_Home",
+        "Charging_Stations_Near_Work",
+        "Environmental_Concern_Level"
+      ],
+      "add_null_count": false
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "note": "iteration 1: Treat Number_of_Cars_Owned, Charging_Stations_Near_Home, and Charging_Stations_Near_Work as categorical features"
+  }
+}

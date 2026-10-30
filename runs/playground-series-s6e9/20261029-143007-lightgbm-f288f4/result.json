@@ -1,0 +1,111 @@
+{
+  "run_id": "20261029-143007-lightgbm-f288f4",
+  "attempt_id": "20261029-142824-9cedd3",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-29T14:30:07.724386+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9396638824450184,
+  "cv_std": 0.0019430466095086104,
+  "fold_scores": [
+    0.9358115647603936,
+    0.9405776744417157,
+    0.9407487466825442,
+    0.9406323307752691,
+    0.9407089032062058
+  ],
+  "best_iterations": [
+    94,
+    104,
+    117,
+    105,
+    108
+  ],
+  "train_rows": 133733,
+  "n_features": 16,
+  "top_features": [
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 4189.6
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 4117.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 3343.8
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 3267.0
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 2681.0
+    },
+    {
+      "feature": "Age",
+      "importance": 2398.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 2172.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 1641.4
+    },
+    {
+      "feature": "Number_of_Cars_Owned",
+      "importance": 653.6
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 520.8
+    },
+    {
+      "feature": "City_Type",
+      "importance": 520.6
+    },
+    {
+      "feature": "Gender",
+      "importance": 487.6
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 323.8
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 286.6
+    },
+    {
+      "feature": "Subsidy_Available",
+      "importance": 132.0
+    }
+  ],
+  "duration_s": 48.8,
+  "config": {
+    "metric": "roc_auc",
+    "model": "lightgbm",
+    "params": {
+      "num_leaves": 255
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "note": "iteration 1: Increase LightGBM num_leaves to 255"
+  }
+}
