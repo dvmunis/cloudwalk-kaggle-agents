@@ -23,10 +23,10 @@ OUT_DIR = Path(__file__).parent / "workflows"
 CODE_DIR = Path(__file__).parent / "code"
 GROQ_CREDENTIAL = {"id": "kgGroqCredent01", "name": "Groq"}
 DEFAULT_MODEL = "openai/gpt-oss-120b"
-# Used once the primary model cannot serve this call any more (daily quota spent,
-# model withdrawn); separate quota on Groq's free tier.
-FALLBACK_MODEL = "openai/gpt-oss-20b"
-LLM_RETRIES = 4
+# Used in order once the model before cannot serve this call any more (daily quota
+# spent, model withdrawn); each has its own quota on Groq's free tier.
+FALLBACK_CHAIN = "openai/gpt-oss-20b,qwen/qwen3.8-27b"
+LLM_RETRIES = 6
 LLM_RETRY_WAIT_S = 30
 
 SHARED_RULES = (
@@ -227,10 +227,11 @@ def _connect(*names: str) -> dict:
     return {a: {"main": [[{"node": b, "type": "main", "index": 0}]]} for a, b in zip(names, names[1:])}
 
 
-# Which model the next LLM call uses: the fallback once "Note failure" has seen the
-# primary model run out of daily quota (shared by the chat model and the trace).
-MODEL_EXPR = (f"($('Note failure').isExecuted && $('Note failure').last().json.use_fallback)"
-              f" ? ($env.GROQ_FALLBACK_MODEL || '{FALLBACK_MODEL}')"
+# Which model the next LLM call uses: the primary, or the model of the fallback chain
+# that "Note failure" moved to (shared by the chat model and the trace).
+MODEL_EXPR = (f"(($('Note failure').isExecuted ? $('Note failure').last().json.level : 0) > 0)"
+              f" ? ($env.GROQ_FALLBACK_MODEL || '{FALLBACK_CHAIN}').split(',')"
+              f"[$('Note failure').last().json.level - 1].trim()"
               f" : ($env.GROQ_MODEL || '{DEFAULT_MODEL}')")
 
 
@@ -286,7 +287,8 @@ def build_agent(name: str, spec: dict) -> dict:
             "name": "Return decision", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1180, 0],
             "parameters": {"jsCode": f"return [{{ json: $('{title} Agent').first().json.output }}];"},
         },
-        _code("Note failure", "note-failure.js") | {"position": [700, 400]},
+        _code_text("Note failure", (CODE_DIR / "note-failure.js").read_text()
+                   .replace("__FALLBACK_CHAIN__", FALLBACK_CHAIN), [700, 400]),
         {
             "name": "Retry?", "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [940, 400],
             "parameters": {

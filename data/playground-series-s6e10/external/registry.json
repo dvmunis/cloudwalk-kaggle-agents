@@ -140,5 +140,17 @@
     "title": "Flight Chronicles",
     "status": "rejected",
     "reason": "data new.csv: no 'satisfaction' column"
+  },
+  "anandshaw2001/airlines-reviews-and-rating": {
+    "ref": "anandshaw2001/airlines-reviews-and-rating",
+    "title": "Airlines Reviews and Rating",
+    "status": "rejected",
+    "reason": "Airlines Reviews and Rating.csv: no 'satisfaction' column"
+  },
+  "luthfimuthathohirin/indonesia-pariwisata-super-prioritas-dpsp": {
+    "ref": "luthfimuthathohirin/indonesia-pariwisata-super-prioritas-dpsp",
+    "title": "Indonesia Pariwisata Destinasi Super Prioritas",
+    "status": "rejected",
+    "reason": "download failed: 404 Client Error: Not Found for url: https://api.kaggle.com/v1/datasets.DatasetApiService/DownloadDataset"
   }
 }

@@ -315,11 +315,12 @@ Agents run on Groq `openai/gpt-oss-120b` (free tier); a full-data iteration take
 one attempt of three iterations uses roughly 60k tokens: about three attempts
 per day. The agents wait 30 seconds and retry on a rate limit. If the limit is
 still there after the wait, it is the daily one (the per-minute window has
-passed), and the agent switches to `openai/gpt-oss-20b`, which has its own quota,
-for the rest of that decision; a missing model switches at once. n8n passes only
+passed), and the agent moves to the next model of a fallback chain,
+`openai/gpt-oss-20b` then `qwen/qwen3.8-27b`, each with its own quota, for the
+rest of that decision; a missing model moves on at once. n8n passes only
 its own summary of the Groq error to the workflow, so the rule reads persistence
-rather than Groq's message. The trace records which model answered and why. Both
-models can be changed with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL`.
+rather than Groq's message. The trace records which model answered and why. The
+models are set with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL` (comma-separated).
 
 ### What the first traces taught us (s6e9)
 

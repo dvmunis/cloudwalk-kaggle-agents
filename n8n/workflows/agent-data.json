@@ -69,7 +69,7 @@
         220
       ],
       "parameters": {
-        "model": "={{ ($('Note failure').isExecuted && $('Note failure').last().json.use_fallback) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b') : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') }}",
+        "model": "={{ (($('Note failure').isExecuted ? $('Note failure').last().json.level : 0) > 0) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b,qwen/qwen3.8-27b').split(',')[$('Note failure').last().json.level - 1].trim() : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') }}",
         "options": {
           "temperature": 0.2
         }
@@ -101,7 +101,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "// The trace event for this decision: what the agent decided, what it saw (its\n// full context) and what the LLM call cost (model, attempts, time, prompt size).\n// Token counts stay inside the LangChain sub-node, which workflow code cannot\n// read, so the exact prompt size in characters is logged instead.\n// data, ($('Note failure').isExecuted && $('Note failure').last().json.use_fallback) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b') : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') and 3489 are filled in by build_workflows.py;\n// ($('Note failure').isExecuted && $('Note failure').last().json.use_fallback) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b') : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') is the same expression that picks the chat model (primary or fallback).\nconst failed = $('Note failure').isExecuted ? $('Note failure').last().json : null;\nconst context = $('Input').first().json.context;\n\nreturn [{\n  json: {\n    agent: 'data',\n    kind: 'decision',\n    content: $json.output,\n    reasoning: $json.output.reasoning,\n    context,\n    meta: {\n      model: ($('Note failure').isExecuted && $('Note failure').last().json.use_fallback) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b') : ($env.GROQ_MODEL || 'openai/gpt-oss-120b'),\n      fallback_reason: failed?.use_fallback ? failed.fallback_reason : null,\n      llm_attempts: (failed?.failures ?? 0) + 1,\n      elapsed_ms: Date.now() - $('Start clock').first().json.started_ms,\n      prompt_chars: 3489 + 'Context:\\n'.length + JSON.stringify(context).length,\n    },\n  },\n}];\n"
+        "jsCode": "// The trace event for this decision: what the agent decided, what it saw (its\n// full context) and what the LLM call cost (model, attempts, time, prompt size).\n// Token counts stay inside the LangChain sub-node, which workflow code cannot\n// read, so the exact prompt size in characters is logged instead.\n// data, (($('Note failure').isExecuted ? $('Note failure').last().json.level : 0) > 0) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b,qwen/qwen3.8-27b').split(',')[$('Note failure').last().json.level - 1].trim() : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') and 3489 are filled in by build_workflows.py;\n// (($('Note failure').isExecuted ? $('Note failure').last().json.level : 0) > 0) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b,qwen/qwen3.8-27b').split(',')[$('Note failure').last().json.level - 1].trim() : ($env.GROQ_MODEL || 'openai/gpt-oss-120b') is the same expression that picks the chat model (primary or fallback).\nconst failed = $('Note failure').isExecuted ? $('Note failure').last().json : null;\nconst context = $('Input').first().json.context;\n\nreturn [{\n  json: {\n    agent: 'data',\n    kind: 'decision',\n    content: $json.output,\n    reasoning: $json.output.reasoning,\n    context,\n    meta: {\n      model: (($('Note failure').isExecuted ? $('Note failure').last().json.level : 0) > 0) ? ($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b,qwen/qwen3.8-27b').split(',')[$('Note failure').last().json.level - 1].trim() : ($env.GROQ_MODEL || 'openai/gpt-oss-120b'),\n      fallback_reason: failed?.use_fallback ? failed.fallback_reason : null,\n      llm_attempts: (failed?.failures ?? 0) + 1,\n      elapsed_ms: Date.now() - $('Start clock').first().json.started_ms,\n      prompt_chars: 3489 + 'Context:\\n'.length + JSON.stringify(context).length,\n    },\n  },\n}];\n"
       },
       "position": [
         700,
@@ -148,7 +148,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "parameters": {
-        "jsCode": "// Counts failed LLM calls in this decision ($runIndex grows on each pass) and\n// decides whether the next call switches to the fallback model.\n// n8n hands this branch only its own summary of the Groq error (\"The service is\n// receiving too many requests from you\"), not Groq's text, so a spent daily quota\n// cannot be told apart from the per-minute limit by its message. It is told apart\n// by persistence instead: the per-minute window has passed after one wait, the\n// daily one has not. A missing or withdrawn model switches at once. The switch\n// sticks for the rest of this decision.\nconst text = (error) => String(error?.message ?? error ?? '');\nconst RATE_LIMIT = /too many requests|rate limit|tokens per day|\\(TPD\\)/i;\nconst error = $json.error;\nconst message = text(error);\nconst modelGone = /could not be found|model_not_found|decommissioned|does not exist/i.test(message);\nconst previous = $runIndex > 0 ? $('Note failure').last().json : null;\nconst limitPersisted = RATE_LIMIT.test(message) && previous !== null && RATE_LIMIT.test(text(previous.error));\n\nlet reason = previous?.use_fallback ? previous.fallback_reason : null;\nif (!reason && modelGone) reason = `model unavailable: ${message.slice(0, 200)}`;\nif (!reason && limitPersisted) reason = `rate limit persisted after waiting (daily quota): ${message.slice(0, 200)}`;\n\nreturn [{ json: { failures: $runIndex + 1, error, use_fallback: reason !== null, fallback_reason: reason } }];\n"
+        "jsCode": "// Counts failed LLM calls in this decision ($runIndex grows on each pass) and\n// decides which model the next call uses: level 0 is GROQ_MODEL, level n the n-th\n// model in GROQ_FALLBACK_MODEL (a comma-separated chain).\n// n8n hands this branch only its own summary of the Groq error (\"The service is\n// receiving too many requests from you\"), not Groq's text, so a spent daily quota\n// cannot be told apart from the per-minute limit by its message. It is told apart\n// by persistence instead: the per-minute window has passed after one wait, the\n// daily one has not. So a model moves to the next one in the chain after two rate\n// limits in a row, or at once when the model is missing. The switch sticks for the\n// rest of this decision.\nconst text = (error) => String(error?.message ?? error ?? '');\nconst RATE_LIMIT = /too many requests|rate limit|tokens per day|\\(TPD\\)/i;\nconst error = $json.error;\nconst message = text(error);\nconst modelGone = /could not be found|model_not_found|decommissioned|does not exist/i.test(message);\nconst previous = $runIndex > 0 ? $('Note failure').last().json : null;\nconst level = previous?.level ?? 0;\nconst streak = RATE_LIMIT.test(message) ? (previous?.streak ?? 0) + 1 : 0;\nconst chainLength = 1 + String($env.GROQ_FALLBACK_MODEL || 'openai/gpt-oss-20b,qwen/qwen3.8-27b').split(',').length;\n\nlet next = level;\nlet reason = previous?.fallback_reason ?? null;\nif ((modelGone || streak >= 2) && level + 1 < chainLength) {\n  next = level + 1;\n  reason = modelGone ? `model unavailable: ${message.slice(0, 200)}`\n    : `rate limit persisted after waiting (daily quota): ${message.slice(0, 200)}`;\n}\n\nreturn [{\n  json: {\n    failures: $runIndex + 1, error, level: next, streak: next === level ? streak : 0,\n    use_fallback: next > 0, fallback_reason: next > 0 ? reason : null,\n  },\n}];\n"
       },
       "position": [
         700,
@@ -174,7 +174,7 @@
           "conditions": [
             {
               "id": "4421da20-1c65-5768-bde8-56aa3cd19eac",
-              "leftValue": "={{ $json.failures <= 4 }}",
+              "leftValue": "={{ $json.failures <= 6 }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -212,7 +212,7 @@
         600
       ],
       "parameters": {
-        "errorMessage": "={{ 'Data agent: LLM call failed after 4 retries: ' + ($json.error?.message ?? $json.error ?? 'unknown error') }}"
+        "errorMessage": "={{ 'Data agent: LLM call failed after 6 retries: ' + ($json.error?.message ?? $json.error ?? 'unknown error') }}"
       },
       "id": "faae528b-1ed6-5f6a-876f-f49c04147e6e"
     }
