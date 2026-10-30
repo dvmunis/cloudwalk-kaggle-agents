@@ -3,9 +3,15 @@
 A team of AI agents, orchestrated in **n8n**, that enters a Kaggle tabular
 competition, iterates on experiments and submits — with every decision logged.
 
-> Status: **phase 4** — five LLM agents (Groq) iterate inside one attempt:
-> plan, choose features and model, train, decide whether to submit, review the
-> leaderboard and revise the plan, until the goal or the iteration budget.
+| Case requirement | Where it is |
+|---|---|
+| Planner, Data, Modeling and Evaluator agents | [Agents](#agents); one n8n workflow each in `n8n/workflows/agent-*.json` |
+| Compete autonomously, goal: top 20% | [Results](#results): **top 16.8% on s5e6** (dataset found by the agents, final combination set by hand); s6e9 top 39.9%, s6e10 top 48.7% |
+| Switch competitions with minimal changes | three competitions, only the slug changed ([Tools](#tools)) |
+| Log the agents' reasoning | [Traceability](#tools); every attempt in `runs/<comp>/attempts/*.jsonl` |
+| Bonus: LB Reviewer agent | [Agents](#agents), [The improvement loop](#the-improvement-loop) |
+| Bonus: dashboard | [Dashboard](#dashboard) |
+| Reproducible | [How to run](#how-to-run), [Tests](#tests) |
 
 ## Architecture
 
@@ -211,7 +217,7 @@ docker compose run --rm worker python -m scripts.baseline --competition <slug> -
 ### Tests
 
 ```bash
-docker compose run --rm worker pytest -q    # worker: tools, training, trace (30 tests)
+docker compose run --rm worker pytest -q    # worker: tools, training, trace (31 tests)
 node --test n8n/tests/*.test.js             # Orchestrator guardrails, loop control, model fallback (21 tests)
 ```
 
@@ -219,7 +225,7 @@ The worker tests use small synthetic competitions (binary, regression, top-k
 multiclass) and never call Kaggle. The n8n tests run the Orchestrator's Code
 nodes outside n8n with a harness that mimics `$()`.
 
-## Results so far
+## Results
 
 | Competition | Task | Best public (rank) | Goal: top 20% | How |
 |---|---|---|---|---|
@@ -229,25 +235,6 @@ nodes outside n8n with a harness that mimics `$()`.
 
 The same code ran all three; only the competition slug changed. Details per
 competition below.
-
-### s6e9
-
-| Competition | Approach | CV | Public | Rank |
-|---|---|---|---|---|
-| playground-series-s6e9 | LightGBM defaults (no-LLM baseline) | 0.94166 | 0.94150 | 2527 / 3576 (top 70.7%) |
-| playground-series-s6e9 | Agents: frequency encoding of Annual_Income_USD, Daily_Commute_km, Age + `num_leaves=127` | 0.94268 | 0.94274 | 1779 / 3576 (top 49.8%) |
-| playground-series-s6e9 | Agents, loop of 3 iterations: LightGBM tuning → repeat skipped → switch to XGBoost | 0.94306 | not submitted (gain below CV noise) | — |
-| playground-series-s6e9 | Blend tool (checked by hand): LightGBM + target encoding, XGBoost, XGBoost + target encoding | 0.94324 | not submitted | — |
-| playground-series-s6e9 | Checked by hand: LightGBM + target encoding of the numeric columns (income, commute, age) | **0.94527** | **0.94558** | 1425 / 3576 (top 39.9%) |
-| playground-series-s6e9 | Agents, 2 iterations from that run: + categorical target encoding; + original dataset rows | 0.94524 / 0.94521 | not submitted (no gain) | — |
-| playground-series-s6e9 | Checked by hand: XGBoost + numeric target encoding (best single model); blends with the LightGBM runs reach 0.94549–0.94552, no gain | **0.94552** | not submitted | — |
-
-Example of a full attempt (`20261029-145526-a6c588`, 3 iterations): the
-Planner started from the best run; iteration 1 tuned LightGBM (CV 0.94286); the
-LB Reviewer judged LightGBM tuning exhausted and moved the plan to XGBoost;
-iteration 2 proposed a repeat, which the guardrail skipped and fed back;
-iteration 3 trained XGBoost (CV 0.94306, best so far). The Evaluator held the
-submission because the gain was below the CV standard deviation.
 
 ### s5e6
 
@@ -275,6 +262,62 @@ On all rows that configuration scored **CV 0.36004, public 0.36696, rank
 the agents; the combination was set by hand, and the two rules behind it (try
 external data early; numeric columns with few values as categorical) are now in
 the agents' shared instructions.
+
+### s6e9
+
+| Competition | Approach | CV | Public | Rank |
+|---|---|---|---|---|
+| playground-series-s6e9 | LightGBM defaults (no-LLM baseline) | 0.94166 | 0.94150 | 2527 / 3576 (top 70.7%) |
+| playground-series-s6e9 | Agents: frequency encoding of Annual_Income_USD, Daily_Commute_km, Age + `num_leaves=127` | 0.94268 | 0.94274 | 1779 / 3576 (top 49.8%) |
+| playground-series-s6e9 | Agents, loop of 3 iterations: LightGBM tuning → repeat skipped → switch to XGBoost | 0.94306 | not submitted (gain below CV noise) | — |
+| playground-series-s6e9 | Blend tool (checked by hand): LightGBM + target encoding, XGBoost, XGBoost + target encoding | 0.94324 | not submitted | — |
+| playground-series-s6e9 | Checked by hand: LightGBM + target encoding of the numeric columns (income, commute, age) | **0.94527** | **0.94558** | 1425 / 3576 (top 39.9%) |
+| playground-series-s6e9 | Agents, 2 iterations from that run: + categorical target encoding; + original dataset rows | 0.94524 / 0.94521 | not submitted (no gain) | — |
+| playground-series-s6e9 | Checked by hand: XGBoost + numeric target encoding (best single model); blends with the LightGBM runs reach 0.94549–0.94552, no gain | **0.94552** | not submitted | — |
+
+Example of a full attempt (`20261029-145526-a6c588`, 3 iterations): the
+Planner started from the best run; iteration 1 tuned LightGBM (CV 0.94286); the
+LB Reviewer judged LightGBM tuning exhausted and moved the plan to XGBoost;
+iteration 2 proposed a repeat, which the guardrail skipped and fed back;
+iteration 3 trained XGBoost (CV 0.94306, best so far). The Evaluator held the
+submission because the gain was below the CV standard deviation.
+
+#### Before target encoding
+
+Target encoding of the categorical columns changed nothing (they are already
+native categoricals), and blending LightGBM with XGBoost adds about +0.0002 AUC:
+the models make the same mistakes. Every lever available to the agents moves the
+score by 0.0002–0.0004, while the top 20% is 0.003 away. Closing that gap needs
+a different kind of signal (for Playground competitions, typically the original
+dataset the synthetic data was generated from, or engineered interactions), not
+more tuning.
+
+#### Original dataset and what moved the score
+
+The agents found the original dataset on their own: the Planner wrote searches
+from the column names, discovery checked ten candidates and accepted
+`itzzomkar/ev-adoption-behavior-and-range-anxiety` (10,000 rows, same 13
+features). It rejected a re-upload of the same rows, datasets derived from the
+competition, and unrelated EV datasets.
+
+Measured on the best LightGBM configuration (CV AUC, same folds):
+
+| Change | CV | Gain |
+|---|---|---|
+| Baseline (frequency encoding, `lr 0.03`, 127 leaves) | 0.94290 | |
+| + original dataset rows in the training folds | 0.94279 | -0.0001 |
+| + target mean per value from the original dataset (prototype) | 0.94302 | +0.0001 |
+| + digit features (prototype, now a tool) | 0.94325 | +0.0004 |
+| Logistic regression on one-hot bins, blended with the trees (prototype) | 0.94327 | +0.0004 |
+| + target encoding of the numeric columns | **0.94527** | **+0.0024** |
+
+The original data barely helps here. What helps is target encoding of the
+high-cardinality numeric columns: the synthetic generator ties the target to
+specific values of income, commute and age, and a per-value target mean (computed
+out-of-fold) captures it. The target-encoding tool already accepted numeric
+columns; the agents only applied it to text columns until the prompt said it
+works for numeric ones too. This finding came from a manual check while building
+the external-data tool, and the agents then built on that run.
 
 ### s6e10
 
@@ -305,23 +348,6 @@ standard deviation). In the third iteration both Groq models had used their dail
 quota; the attempt closed as failed with that reason in its trace. The fallback
 had already switched the 120b agents to the 20b mid-attempt without help.
 
-### LLM budget
-
-Agents run on Groq `openai/gpt-oss-120b` (free tier); a full-data iteration takes
-2–3 minutes on s6e9 and s6e10 and about 25 on s5e6 (750k rows, 7 classes).
-
-**Groq free-tier budget.** `gpt-oss-120b` allows 8,000 tokens per minute and
-200,000 per day. An iteration makes four LLM calls of about 4–5k tokens each, so
-one attempt of three iterations uses roughly 60k tokens: about three attempts
-per day. The agents wait 30 seconds and retry on a rate limit. If the limit is
-still there after the wait, it is the daily one (the per-minute window has
-passed), and the agent moves to the next model of a fallback chain,
-`openai/gpt-oss-20b` then `qwen/qwen3.8-27b`, each with its own quota, for the
-rest of that decision; a missing model moves on at once. n8n passes only
-its own summary of the Groq error to the workflow, so the rule reads persistence
-rather than Groq's message. The trace records which model answered and why. The
-models are set with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL` (comma-separated).
-
 ### What the first traces taught us (s6e9)
 
 The first agent attempt worked end to end but the trace exposed weak decisions.
@@ -341,43 +367,23 @@ Building the loop exposed more:
 | Agents proposed configurations identical to earlier runs; training ran anyway | Guardrail detects repeats (including the best run) and skips training, telling the agents to propose something new |
 | The LB Reviewer compared 20%-sample runs with full-data runs and reported gains that did not exist | Agents only see runs trained on the same share of the data |
 | The Evaluator rarely submits (gains below the CV noise), so a reviewer that runs only after submissions never ran | The LB Reviewer runs after every iteration, using the team's current leaderboard position |
-| Groq free tier: per-minute and per-day token limits | Agents wait and retry; prompts sent as compact JSON; budget documented above |
+| Groq free tier: per-minute and per-day token limits | Agents wait and retry; prompts sent as compact JSON; budget documented below |
 | With target encoding, the attribution guardrail forced the best run's model (XGBoost), so "LightGBM + target encoding" became a repeat and was skipped | The reference for attribution is the best run of the model the agent chose |
 | Agents kept proposing a null count (no missing values), which the guardrail removed, so three iterations in a row were skipped | After a skip, the focus moves to another plan step and explains why; two skips in a row stop the attempt; prompts say a null count needs missing values |
 
-### s6e9: original dataset and what moved the score
+### LLM budget
 
-The agents found the original dataset on their own: the Planner wrote searches
-from the column names, discovery checked ten candidates and accepted
-`itzzomkar/ev-adoption-behavior-and-range-anxiety` (10,000 rows, same 13
-features). It rejected a re-upload of the same rows, datasets derived from the
-competition, and unrelated EV datasets.
+Agents run on Groq `openai/gpt-oss-120b` (free tier); a full-data iteration takes
+2–3 minutes on s6e9 and s6e10 and about 25 on s5e6 (750k rows, 7 classes).
 
-Measured on the best LightGBM configuration (CV AUC, same folds):
-
-| Change | CV | Gain |
-|---|---|---|
-| Baseline (frequency encoding, `lr 0.03`, 127 leaves) | 0.94290 | |
-| + original dataset rows in the training folds | 0.94279 | -0.0001 |
-| + target mean per value from the original dataset (prototype) | 0.94302 | +0.0001 |
-| + digit features (prototype, now a tool) | 0.94325 | +0.0004 |
-| Logistic regression on one-hot bins, blended with the trees (prototype) | 0.94327 | +0.0004 |
-| + target encoding of the numeric columns | **0.94527** | **+0.0024** |
-
-The original data barely helps here. What helps is target encoding of the
-high-cardinality numeric columns: the synthetic generator ties the target to
-specific values of income, commute and age, and a per-value target mean (computed
-out-of-fold) captures it. The target-encoding tool already accepted numeric
-columns; the agents only applied it to text columns until the prompt said it
-works for numeric ones too. This finding came from a manual check while building
-the external-data tool, and the agents then built on that run.
-
-### s6e9: where the score stood before that
-
-Target encoding of the categorical columns changed nothing (they are already
-native categoricals), and blending LightGBM with XGBoost adds about +0.0002 AUC:
-the models make the same mistakes. Every lever available to the agents moves the
-score by 0.0002–0.0004, while the top 20% is 0.003 away. Closing that gap needs
-a different kind of signal (for Playground competitions, typically the original
-dataset the synthetic data was generated from, or engineered interactions), not
-more tuning.
+**Groq free-tier budget.** `gpt-oss-120b` allows 8,000 tokens per minute and
+200,000 per day. An iteration makes four LLM calls of about 4–5k tokens each, so
+one attempt of three iterations uses roughly 60k tokens: about three attempts
+per day. The agents wait 30 seconds and retry on a rate limit. If the limit is
+still there after the wait, it is the daily one (the per-minute window has
+passed), and the agent moves to the next model of a fallback chain,
+`openai/gpt-oss-20b` then `qwen/qwen3.8-27b`, each with its own quota, for the
+rest of that decision; a missing model moves on at once. n8n passes only
+its own summary of the Groq error to the workflow, so the rule reads persistence
+rather than Groq's message. The trace records which model answered and why. The
+models are set with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL` (comma-separated).
