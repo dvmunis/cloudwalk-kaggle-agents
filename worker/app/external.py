@@ -20,6 +20,8 @@ from .profiling import CompetitionData
 
 MIN_FEATURE_MATCH = 0.8
 MAX_DOWNLOAD_MB = 100
+# Share of the smaller file's rows found in the other above which two files are the same data.
+MAX_ROW_OVERLAP = 0.5
 CANDIDATES_PER_QUERY = 5
 MAX_DOWNLOADS = 8
 
@@ -62,6 +64,35 @@ def _match_columns(columns: list[str], data: CompetitionData) -> dict[str, str]:
     return {c: wanted[key(c)] for c in columns if key(c) in wanted}
 
 
+def _align_binary_labels(frame: pd.DataFrame, data: CompetitionData) -> dict | None:
+    """External label -> competition class when a binary target is spelled differently
+    (e.g. 'satisfied' / 'neutral or dissatisfied' against True / False).
+
+    Each pairing is scored by how far the external label groups' feature means sit from
+    the competition classes' means (in competition standard deviations); the closer
+    pairing wins, and only if it is clearly closer, since a wrong one would flip the target."""
+    labels = sorted(frame[data.target].astype(str).unique())
+    if len(data.classes) != 2 or len(labels) != 2:
+        return None
+    numeric = [c for c in data.feature_cols if c in frame and pd.api.types.is_numeric_dtype(data.train[c])]
+    if not numeric:
+        return None
+    comp_target = data.train[data.target].astype(str)
+    scale = data.train[numeric].std().replace(0, 1)
+    ext = frame[numeric].apply(pd.to_numeric, errors="coerce")
+    comp_means = {str(c): data.train.loc[comp_target == str(c), numeric].mean() / scale for c in data.classes}
+    ext_means = {label: ext[frame[data.target].astype(str) == label].mean() / scale for label in labels}
+
+    def distance(pairing):
+        return sum(float((ext_means[label] - comp_means[str(cls)]).abs().sum()) for label, cls in pairing)
+
+    straight, crossed = list(zip(labels, data.classes)), list(zip(labels, list(data.classes)[::-1]))
+    d_straight, d_crossed = distance(straight), distance(crossed)
+    if max(d_straight, d_crossed) < 1.5 * min(d_straight, d_crossed):
+        return None
+    return dict(straight if d_straight < d_crossed else crossed)
+
+
 def _inspect(path: Path, data: CompetitionData) -> tuple[pd.DataFrame | None, str]:
     """Normalized frame if the file can be used as extra training rows, else the reason it cannot."""
     try:
@@ -80,22 +111,53 @@ def _inspect(path: Path, data: CompetitionData) -> tuple[pd.DataFrame | None, st
     if len(frame) in (len(data.train), len(data.test)):
         return None, "same number of rows as the competition files (likely a copy)"
     frame = frame.dropna(subset=[data.target])
+    label_note = ""
     if data.task == "regression":
         frame[data.target] = pd.to_numeric(frame[data.target], errors="coerce")
         frame = frame.dropna(subset=[data.target])
     else:
         classes = {str(c) for c in data.classes}
         unknown = set(frame[data.target].astype(str)) - classes
-        if unknown:
-            return None, f"target values {sorted(unknown)[:5]} are not competition classes"
         lookup = {str(c): c for c in data.classes}
+        if unknown:
+            lookup = _align_binary_labels(frame, data)
+            if lookup is None:
+                return None, f"target values {sorted(unknown)[:5]} are not competition classes"
+            label_note = "; labels mapped by feature means: " + ", ".join(f"{k} -> {v}" for k, v in lookup.items())
         frame[data.target] = frame[data.target].astype(str).map(lookup)
     if frame.empty:
         return None, "no usable rows"
     for col in data.feature_cols:
         if col not in frame:
             frame[col] = pd.NA
-    return frame[[*data.feature_cols, data.target]], f"{len(matched)} of {len(data.feature_cols)} features"
+    return frame[[*data.feature_cols, data.target]], f"{len(matched)} of {len(data.feature_cols)} features{label_note}"
+
+
+def _comparable(col: pd.Series) -> pd.Series:
+    """Values as text that matches across files: 5, 5.0 and '5' all become '5.0'."""
+    numeric = pd.to_numeric(col, errors="coerce")
+    return (numeric.astype(float) if numeric.notna().sum() == col.notna().sum() else col).astype(str)
+
+
+def _overlapping(frame: pd.DataFrame, registry: dict, data: CompetitionData) -> str | None:
+    """Why the frame repeats an accepted dataset (another cut or merge of the same source), if it does.
+
+    Rows are compared on the numeric columns both files have (re-uploads often recode
+    text values, e.g. 'Eco' -> 'Economy'); when most rows of the smaller one appear in
+    the other, they are the same data and only the first is kept."""
+    numeric = [c for c in data.feature_cols if pd.api.types.is_numeric_dtype(data.train[c])]
+    for ref, entry in registry.items():
+        if entry["status"] != "accepted":
+            continue
+        accepted = pd.read_csv(_dir(data.slug) / f"{entry['name']}.csv")
+        shared = [c for c in numeric if frame[c].notna().any() and accepted[c].notna().any()]
+        if not shared:
+            continue
+        keys = lambda f: set(pd.util.hash_pandas_object(f[shared].apply(_comparable), index=False))  # noqa: E731
+        common = len(keys(frame) & keys(accepted))
+        if common >= MAX_ROW_OVERLAP * min(len(frame), len(accepted)):
+            return f"{common} of its rows are already in {ref}"
+    return None
 
 
 def discover(data: CompetitionData, queries: list[str]) -> dict:
@@ -138,8 +200,11 @@ def discover(data: CompetitionData, queries: list[str]) -> dict:
             # Re-uploads of the same data would count the same rows twice.
             digest = hashlib.sha256(pd.util.hash_pandas_object(frame, index=False).values.tobytes()).hexdigest()
             twin = next((r for r, e in registry.items() if e.get("sha256") == digest and e["status"] == "accepted"), None)
+            overlap = None if twin else _overlapping(frame, registry, data)
             if twin:
                 registry[ref] = {**entry, "status": "rejected", "reason": f"same rows as {twin}"}
+            elif overlap:
+                registry[ref] = {**entry, "status": "rejected", "reason": overlap}
             else:
                 name = ref.replace("/", "__")
                 frame.to_csv(_dir(data.slug) / f"{name}.csv", index=False)

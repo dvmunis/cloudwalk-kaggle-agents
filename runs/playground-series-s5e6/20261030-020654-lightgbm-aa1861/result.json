@@ -1,0 +1,83 @@
+{
+  "run_id": "20261030-020654-lightgbm-aa1861",
+  "attempt_id": null,
+  "competition": "playground-series-s5e6",
+  "created_at": "2026-10-30T02:06:55.869534+00:00",
+  "metric": "map@3",
+  "higher_is_better": true,
+  "cv_score": 0.3330244444444444,
+  "cv_std": 0.0018404796744595437,
+  "fold_scores": [
+    0.3356111111111111,
+    0.33205555555555555,
+    0.3324166666666667,
+    0.3304666666666667,
+    0.3345722222222222
+  ],
+  "best_iterations": [
+    697,
+    650,
+    788,
+    709,
+    622
+  ],
+  "train_rows": 150000,
+  "n_features": 8,
+  "top_features": [
+    {
+      "feature": "Phosphorous",
+      "importance": 51940.6
+    },
+    {
+      "feature": "Moisture",
+      "importance": 50578.4
+    },
+    {
+      "feature": "Nitrogen",
+      "importance": 50572.0
+    },
+    {
+      "feature": "Humidity",
+      "importance": 44245.8
+    },
+    {
+      "feature": "Potassium",
+      "importance": 41634.8
+    },
+    {
+      "feature": "Temparature",
+      "importance": 36539.8
+    },
+    {
+      "feature": "Crop Type",
+      "importance": 16047.8
+    },
+    {
+      "feature": "Soil Type",
+      "importance": 9289.6
+    }
+  ],
+  "duration_s": 369.4,
+  "config": {
+    "metric": "map@3",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [
+      "irakozekelly__fertilizer-prediction"
+    ],
+    "blend_runs": [],
+    "note": "manual s5e6 probe: + original dataset"
+  }
+}

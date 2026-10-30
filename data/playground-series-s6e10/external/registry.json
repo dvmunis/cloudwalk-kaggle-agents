@@ -1,0 +1,60 @@
+{
+  "teejmahal20/airline-passenger-satisfaction": {
+    "ref": "teejmahal20/airline-passenger-satisfaction",
+    "title": "Airline Passenger Satisfaction",
+    "status": "accepted",
+    "name": "teejmahal20__airline-passenger-satisfaction",
+    "file": "train.csv",
+    "rows": 103904,
+    "columns": "21 of 21 features; labels mapped by feature means: neutral or dissatisfied -> False, satisfied -> True",
+    "sha256": "1afb8f82647ef52be4403ef103d227a260cf45beeb147c7cd47604b5892cf6eb",
+    "missing_columns": []
+  },
+  "mysarahmadbhat/airline-passenger-satisfaction": {
+    "ref": "mysarahmadbhat/airline-passenger-satisfaction",
+    "title": "Airline Passenger Satisfaction",
+    "status": "rejected",
+    "reason": "103903 of its rows are already in teejmahal20/airline-passenger-satisfaction"
+  },
+  "binaryjoker/airline-passenger-satisfaction": {
+    "ref": "binaryjoker/airline-passenger-satisfaction",
+    "title": "Airline Passenger Satisfaction",
+    "status": "rejected",
+    "reason": "103904 of its rows are already in teejmahal20/airline-passenger-satisfaction"
+  },
+  "rustam32/real-airline-passenger-satisfaction-dataset": {
+    "ref": "rustam32/real-airline-passenger-satisfaction-dataset",
+    "title": "Real Airline Passenger Satisfaction Dataset",
+    "status": "rejected",
+    "reason": "pesquisa-de-satisfacao-do-passageiro-1-tri-2021.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-1-tri-2022.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-2-tri-2022.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-3-tri-2021.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-3-tri-2022.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-4-tri-2021.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; pesquisa-de-satisfacao-do-passageiro-4-tri-2022.csv: unreadable: 'utf-8' codec can't decode byte 0xca in position 25: invalid continuation byte; passenger_survey_balanced.csv: no 'satisfaction' column"
+  },
+  "mikhail1681/airline-quality-ratings": {
+    "ref": "mikhail1681/airline-quality-ratings",
+    "title": "Airline Quality Ratings",
+    "status": "rejected",
+    "reason": "103903 of its rows are already in teejmahal20/airline-passenger-satisfaction"
+  },
+  "matinmahmoudi/sales-and-satisfaction": {
+    "ref": "matinmahmoudi/sales-and-satisfaction",
+    "title": "Sales and Satisfaction",
+    "status": "rejected",
+    "reason": "Sales_with_NaNs_v1.3.csv: no 'satisfaction' column; Sales_without_NaNs_v1.3.csv: no 'satisfaction' column"
+  },
+  "sjleshrac/airlines-customer-satisfaction": {
+    "ref": "sjleshrac/airlines-customer-satisfaction",
+    "title": "Airlines Customer satisfaction",
+    "status": "accepted",
+    "name": "sjleshrac__airlines-customer-satisfaction",
+    "file": "Invistico_Airline.csv",
+    "rows": 129880,
+    "columns": "21 of 21 features; labels mapped by feature means: dissatisfied -> False, satisfied -> True",
+    "sha256": "f870e18ac16a95b13c68ef3049a24c9f06d5fd9df9e436053124ebc726ab2b69",
+    "missing_columns": []
+  },
+  "raminhuseyn/airline-customer-satisfaction": {
+    "ref": "raminhuseyn/airline-customer-satisfaction",
+    "title": "Airline Customer Satisfaction",
+    "status": "rejected",
+    "reason": "129880 of its rows are already in sjleshrac/airlines-customer-satisfaction"
+  }
+}

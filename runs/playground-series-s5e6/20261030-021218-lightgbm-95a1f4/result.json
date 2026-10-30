@@ -1,0 +1,90 @@
+{
+  "run_id": "20261030-021218-lightgbm-95a1f4",
+  "attempt_id": null,
+  "competition": "playground-series-s5e6",
+  "created_at": "2026-10-30T02:12:20.330914+00:00",
+  "metric": "map@3",
+  "higher_is_better": true,
+  "cv_score": 0.34387111111111107,
+  "cv_std": 0.001140345410093399,
+  "fold_scores": [
+    0.34501111111111116,
+    0.34319999999999995,
+    0.3419499999999999,
+    0.3445388888888889,
+    0.34465555555555555
+  ],
+  "best_iterations": [
+    440,
+    337,
+    356,
+    395,
+    339
+  ],
+  "train_rows": 150000,
+  "n_features": 8,
+  "top_features": [
+    {
+      "feature": "Phosphorous",
+      "importance": 29895.0
+    },
+    {
+      "feature": "Moisture",
+      "importance": 29306.8
+    },
+    {
+      "feature": "Nitrogen",
+      "importance": 28792.4
+    },
+    {
+      "feature": "Humidity",
+      "importance": 23479.0
+    },
+    {
+      "feature": "Potassium",
+      "importance": 21385.8
+    },
+    {
+      "feature": "Temparature",
+      "importance": 15972.6
+    },
+    {
+      "feature": "Crop Type",
+      "importance": 11186.4
+    },
+    {
+      "feature": "Soil Type",
+      "importance": 2037.6
+    }
+  ],
+  "duration_s": 324.4,
+  "config": {
+    "metric": "map@3",
+    "model": "lightgbm",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [
+        "Temparature",
+        "Humidity",
+        "Moisture",
+        "Nitrogen",
+        "Potassium",
+        "Phosphorous"
+      ],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [
+      "irakozekelly__fertilizer-prediction"
+    ],
+    "blend_runs": [],
+    "note": "manual s5e6 probe: + original + numerics as categories"
+  }
+}

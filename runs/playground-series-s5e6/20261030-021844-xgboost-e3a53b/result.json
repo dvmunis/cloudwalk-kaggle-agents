@@ -1,0 +1,93 @@
+{
+  "run_id": "20261030-021844-xgboost-e3a53b",
+  "attempt_id": null,
+  "competition": "playground-series-s5e6",
+  "created_at": "2026-10-30T02:18:46.826906+00:00",
+  "metric": "map@3",
+  "higher_is_better": true,
+  "cv_score": 0.34596666666666664,
+  "cv_std": 0.0013578259675027264,
+  "fold_scores": [
+    0.34525555555555554,
+    0.34832222222222226,
+    0.345,
+    0.3446277777777778,
+    0.34662777777777776
+  ],
+  "best_iterations": [
+    342,
+    322,
+    314,
+    337,
+    313
+  ],
+  "train_rows": 150000,
+  "n_features": 8,
+  "top_features": [
+    {
+      "feature": "Nitrogen",
+      "importance": 0.14
+    },
+    {
+      "feature": "Phosphorous",
+      "importance": 0.14
+    },
+    {
+      "feature": "Moisture",
+      "importance": 0.14
+    },
+    {
+      "feature": "Humidity",
+      "importance": 0.13
+    },
+    {
+      "feature": "Potassium",
+      "importance": 0.13
+    },
+    {
+      "feature": "Temparature",
+      "importance": 0.12
+    },
+    {
+      "feature": "Crop Type",
+      "importance": 0.11
+    },
+    {
+      "feature": "Soil Type",
+      "importance": 0.1
+    }
+  ],
+  "duration_s": 386.4,
+  "config": {
+    "metric": "map@3",
+    "model": "xgboost",
+    "params": {
+      "max_depth": 8,
+      "learning_rate": 0.05
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [
+        "Temparature",
+        "Humidity",
+        "Moisture",
+        "Nitrogen",
+        "Potassium",
+        "Phosphorous"
+      ],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [
+      "irakozekelly__fertilizer-prediction"
+    ],
+    "blend_runs": [],
+    "note": "manual s5e6 probe: xgboost depth 8 + original + numerics as categories"
+  }
+}

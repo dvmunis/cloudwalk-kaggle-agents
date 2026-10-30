@@ -87,6 +87,8 @@ def fake_kaggle(data_root, monkeypatch):
         "someone/weather": ("weather.csv", pd.DataFrame({"temp": [1.0, 2.0], "rain": [0, 1]})),
         "someone/binary-comp-oof": ("oof.csv", original),
         "other/churn-reupload": ("copy.csv", original),
+        # The same source cut differently: a subset with its columns reordered.
+        "third/churn-subset": ("part.csv", original.iloc[:200][["Churn", "CAT", "Num"]]),
     }
     searches = []
 
@@ -114,6 +116,7 @@ def test_discovery_accepts_only_datasets_with_the_competition_columns(client, fa
     assert "no 'churn' column" in reasons["someone/weather"]
     assert "built from this competition" in reasons["someone/binary-comp-oof"]
     assert reasons["other/churn-reupload"] == "same rows as someone/churn-original"
+    assert reasons["third/churn-subset"] == "200 of its rows are already in someone/churn-original"
     assert client.get("/competitions/binary-comp/profile").json()["external_datasets"][0]["rows"] == 300
 
 
@@ -130,3 +133,23 @@ def test_external_rows_only_join_the_training_folds(client, fake_kaggle):
 
     unknown = client.post("/competitions/binary-comp/train", json={**BASE, "external_data": ["nope"]})
     assert unknown.status_code == 422 and "unknown datasets" in unknown.json()["error"]
+
+
+def test_differently_spelled_binary_labels_are_mapped_by_the_features(client, data_root, monkeypatch):
+    # In the competition churn = 1 goes with high 'num'; the original says 'left' / 'stayed'.
+    rng = np.random.default_rng(2)
+    original = pd.DataFrame({"Num": rng.normal(size=300), "CAT": rng.choice(["a", "b", "c"], size=300)})
+    original["Churn"] = np.where(original["Num"] > 0.3, "left", "stayed")
+    monkeypatch.setattr("app.kaggle_client.search_datasets", lambda q: [{"ref": "someone/churn-words", "size": "1"}])
+
+    def download(ref, dest):
+        dest.mkdir(parents=True, exist_ok=True)
+        original.to_csv(dest / "churn.csv", index=False)
+        return [dest / "churn.csv"]
+
+    monkeypatch.setattr("app.kaggle_client.download_dataset", download)
+    found = client.post("/competitions/binary-comp/external/discover", json={"queries": []}).json()
+
+    assert [d["name"] for d in found["accepted"]] == ["someone__churn-words"]
+    saved = pd.read_csv(data_root / "data" / "binary-comp" / "external" / "someone__churn-words.csv")
+    assert saved.loc[saved["num"] > 0.3, "churn"].eq(1).all() and saved.loc[saved["num"] <= 0.3, "churn"].eq(0).all()
