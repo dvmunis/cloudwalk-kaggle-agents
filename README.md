@@ -243,6 +243,23 @@ files; the no-LLM baseline LightGBM scored CV 0.33784, public 0.34324, rank
 on it (10% sample) ran Planner, Data, Modeling and Evaluator before Groq's daily
 token limit stopped the LB Reviewer.
 
+A later 5% attempt (on the fallback model) found `irakozekelly/fertilizer-prediction`,
+100k rows with every column: the original dataset. Checked on 20% of the rows,
+each step of what then worked:
+
+| Change (20% of rows, MAP@3) | CV |
+|---|---|
+| LightGBM baseline | 0.30999 |
+| + original dataset rows | 0.33302 |
+| + numeric columns as categorical (they have 14–43 values) | 0.34387 |
+| XGBoost `max_depth` 8 instead of LightGBM | 0.34597 |
+
+On all rows that configuration scored **CV 0.36004, public 0.36696, rank
+446 / 2650 (top 16.8%)**, past the top-20% goal. The original dataset was found by
+the agents; the combination was set by hand, and the two rules behind it (try
+external data early; numeric columns with few values as categorical) are now in
+the agents' shared instructions.
+
 Top-20% threshold on the public leaderboard: 0.9464. Agents run on Groq
 `openai/gpt-oss-120b` (free tier); a full-data iteration takes about 2–3 minutes.
 
