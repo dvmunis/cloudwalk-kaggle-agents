@@ -1,0 +1,60 @@
+{
+  "run_id": "20261030-223044-blend-fd3d27",
+  "attempt_id": "20261030-222728-21385d",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-30T22:30:44.989278+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9426127544316631,
+  "cv_std": 0.0019089508099693132,
+  "fold_scores": [
+    0.9388364671453739,
+    0.94375137408695,
+    0.943536878065869,
+    0.9433583444259248,
+    0.9437345796982519
+  ],
+  "best_iterations": [],
+  "train_rows": 133733,
+  "n_features": 0,
+  "top_features": [],
+  "blend": {
+    "method": "rank average",
+    "members": [
+      {
+        "run_id": "20261030-221558-xgboost-e75f5c",
+        "model": "xgboost",
+        "cv_score": 0.9427084527626832
+      },
+      {
+        "run_id": "20261030-221749-lightgbm-7d15e7",
+        "model": "lightgbm",
+        "cv_score": 0.9419994592929426
+      }
+    ]
+  },
+  "duration_s": 1.0,
+  "config": {
+    "metric": "roc_auc",
+    "model": "blend",
+    "params": {},
+    "features": {
+      "drop": [],
+      "frequency_encode": [],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": []
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [
+      "20261030-221558-xgboost-e75f5c",
+      "20261030-221749-lightgbm-7d15e7"
+    ],
+    "note": "iteration 2: Create and evaluate a blend of the top XGBoost and LightGBM runs that both use the external EV adoption dataset."
+  }
+}

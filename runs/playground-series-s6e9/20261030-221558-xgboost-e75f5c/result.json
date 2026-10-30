@@ -1,0 +1,122 @@
+{
+  "run_id": "20261030-221558-xgboost-e75f5c",
+  "attempt_id": "20261030-221408-eb6da5",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-30T22:15:59.054560+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9427084527626832,
+  "cv_std": 0.0019399356804036603,
+  "fold_scores": [
+    0.9388886907373873,
+    0.9440060226009197,
+    0.9436953429309557,
+    0.9432434735887871,
+    0.9438424091681176
+  ],
+  "best_iterations": [
+    694,
+    533,
+    592,
+    708,
+    590
+  ],
+  "train_rows": 133733,
+  "n_features": 19,
+  "top_features": [
+    {
+      "feature": "Subsidy_Available",
+      "importance": 0.64
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 0.24
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 0.03
+    },
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 0.02
+    },
+    {
+      "feature": "Annual_Income_USD_te",
+      "importance": 0.01
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 0.01
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 0.0
+    },
+    {
+      "feature": "Age_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 0.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Home",
+      "importance": 0.0
+    },
+    {
+      "feature": "Current_Car_Type",
+      "importance": 0.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 0.0
+    },
+    {
+      "feature": "Age_freq",
+      "importance": 0.0
+    }
+  ],
+  "duration_s": 53.1,
+  "config": {
+    "metric": "roc_auc",
+    "model": "xgboost",
+    "params": {
+      "learning_rate": 0.02,
+      "n_estimators": 8000
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [
+      "itzzomkar__ev-adoption-behavior-and-range-anxiety"
+    ],
+    "blend_runs": [],
+    "note": "iteration 1: Add the external EV adoption dataset to the training data and retrain XGBoost"
+  }
+}

@@ -129,5 +129,83 @@
     "title": "Korean Equity Daily Prices + DART Filing Impact",
     "status": "rejected",
     "reason": "daily_prices.csv: no 'Will_Buy_EV' column; filing_impact_summary.csv: no 'Will_Buy_EV' column; filing_price_impact.csv: no 'Will_Buy_EV' column; stocks.csv: no 'Will_Buy_EV' column"
+  },
+  "shree0910/electric-vehicle-usage-2019-2026": {
+    "ref": "shree0910/electric-vehicle-usage-2019-2026",
+    "title": "Plug & Play | Electric Vehicle Mobility Usage",
+    "status": "rejected",
+    "reason": "EV_Usage_Dataset_v2.csv: no 'Will_Buy_EV' column"
+  },
+  "venkatsairo4899/ev-charging-station-usage-of-california-city": {
+    "ref": "venkatsairo4899/ev-charging-station-usage-of-california-city",
+    "title": "EV Charging Station Usage of California City",
+    "status": "rejected",
+    "reason": "EVChargingStationUsage.csv: no 'Will_Buy_EV' column"
+  },
+  "likithagedipudi/ev-charging-station-availability-tracking": {
+    "ref": "likithagedipudi/ev-charging-station-availability-tracking",
+    "title": "EV Charging Station Availability Tracking",
+    "status": "rejected",
+    "reason": "ev_charging_station_data.csv: no 'Will_Buy_EV' column"
+  },
+  "risheepanchal/global-ev-charging-stations-dataset": {
+    "ref": "risheepanchal/global-ev-charging-stations-dataset",
+    "title": "Global EV Charging Stations Dataset",
+    "status": "rejected",
+    "reason": "ev_stations_2025.csv: no 'Will_Buy_EV' column"
+  },
+  "patricklford/global-ev-sales-2010-2024": {
+    "ref": "patricklford/global-ev-sales-2010-2024",
+    "title": "Global EV Sales: 2010-2024",
+    "status": "rejected",
+    "reason": "IEA Global EV Data 2024.csv: no 'Will_Buy_EV' column"
+  },
+  "khushikyad001/ev-adoption-trends-worldwide-20152023": {
+    "ref": "khushikyad001/ev-adoption-trends-worldwide-20152023",
+    "title": "EV Adoption Trends Worldwide (2015\u20132023)",
+    "status": "rejected",
+    "reason": "ev_adoption_dataset.csv: no 'Will_Buy_EV' column"
+  },
+  "shree0910/ev-charging-behavior-and-financial-risk-dataset": {
+    "ref": "shree0910/ev-charging-behavior-and-financial-risk-dataset",
+    "title": "Electric Vehicle Charging Behavior Dataset",
+    "status": "rejected",
+    "reason": "EV Charging Behavior Dataset.csv: no 'Will_Buy_EV' column"
+  },
+  "kunalm95/ev-sensors-driving-pattern-diagnostics-2020-24": {
+    "ref": "kunalm95/ev-sensors-driving-pattern-diagnostics-2020-24",
+    "title": "EV Sensors: Driving Pattern Diagnostics (2020-24)",
+    "status": "rejected",
+    "reason": "daily_user.csv: no 'Will_Buy_EV' column; heavy_user.csv: no 'Will_Buy_EV' column; moderate_user.csv: no 'Will_Buy_EV' column; rare_user.csv: no 'Will_Buy_EV' column"
+  },
+  "datasetengineer/ev-charging-load-dataset-and-optimal-routing": {
+    "ref": "datasetengineer/ev-charging-load-dataset-and-optimal-routing",
+    "title": "EV charging Load Dataset and Optimal Routing",
+    "status": "rejected",
+    "reason": "ev_charging_dataset.csv: no 'Will_Buy_EV' column; location_dataset.csv: no 'Will_Buy_EV' column"
+  },
+  "mobeenfatimah/ev-charging-and-battery-intelligence-dataset": {
+    "ref": "mobeenfatimah/ev-charging-and-battery-intelligence-dataset",
+    "title": "EV Charging & Battery Intelligence Dataset",
+    "status": "rejected",
+    "reason": "ev_battery_health.csv: no 'Will_Buy_EV' column; ev_charging_sessions.csv: no 'Will_Buy_EV' column; ev_charging_stations.csv: no 'Will_Buy_EV' column; ev_charging_telemetry.csv: no 'Will_Buy_EV' column; ev_station_hourly_demand.csv: no 'Will_Buy_EV' column; ev_vehicles.csv: no 'Will_Buy_EV' column"
+  },
+  "roshaaann30/ev-charging-station-analytics-dataset": {
+    "ref": "roshaaann30/ev-charging-station-analytics-dataset",
+    "title": "EV Charging Station Analytics Dataset",
+    "status": "rejected",
+    "reason": "EV_Charging_Station_Analytics_200k.csv: no 'Will_Buy_EV' column; data_dictionary.csv: no 'Will_Buy_EV' column"
+  },
+  "kylefengkfeng209/ev-range-anxiety-and-adoption-psychology": {
+    "ref": "kylefengkfeng209/ev-range-anxiety-and-adoption-psychology",
+    "title": "EV Range Anxiety and Adoption Psychology",
+    "status": "rejected",
+    "reason": "data_sources.csv: no 'Will_Buy_EV' column; ev_adoption_metrics.csv: no 'Will_Buy_EV' column; ev_consumer_sentiment.csv: no 'Will_Buy_EV' column"
+  },
+  "datascikhan/millionaire-habits-dataset": {
+    "ref": "datascikhan/millionaire-habits-dataset",
+    "title": "Millionaire Habits Dataset",
+    "status": "rejected",
+    "reason": "Millionaire_Habits_Data_Dictionary.csv: no 'Will_Buy_EV' column; Millionaire_Habits_Dataset.csv: no 'Will_Buy_EV' column; correlations.csv: no 'Will_Buy_EV' column; sample_10k_rows.csv: no 'Will_Buy_EV' column"
   }
 }

@@ -3,6 +3,9 @@
 A team of AI agents, orchestrated in **n8n**, that enters a Kaggle tabular
 competition, iterates on experiments and submits — with every decision logged.
 
+**Demo video** (3.5 min, narrated): [docs/demo.mp4](docs/demo.mp4) — the README, a live run in n8n,
+an agent's reasoning in the dashboard trace, and the s5e6 result.
+
 | Case requirement | Where it is |
 |---|---|
 | Planner, Data, Modeling and Evaluator agents | [Agents](#agents); one n8n workflow each in `n8n/workflows/agent-*.json` |
