@@ -92,5 +92,53 @@
     "title": "Twitter Airline Sentiment Dataset",
     "status": "rejected",
     "reason": "Tweets.csv: no 'satisfaction' column"
+  },
+  "arseniyshutko/binary-aviation-satisfaction-129k": {
+    "ref": "arseniyshutko/binary-aviation-satisfaction-129k",
+    "title": "Airline Satisfaction Data \u2708\ufe0f",
+    "status": "rejected",
+    "reason": "103904 of its rows are already in teejmahal20/airline-passenger-satisfaction"
+  },
+  "nilanjansamanta1210/airline-passenger-satisfaction": {
+    "ref": "nilanjansamanta1210/airline-passenger-satisfaction",
+    "title": "Airline Passenger Satisfaction",
+    "status": "rejected",
+    "reason": "103903 of its rows are already in teejmahal20/airline-passenger-satisfaction"
+  },
+  "juhibhojani/airline-reviews": {
+    "ref": "juhibhojani/airline-reviews",
+    "title": "Airline Reviews",
+    "status": "rejected",
+    "reason": "Airline_review.csv: no 'satisfaction' column"
+  },
+  "sujalsuthar/airlines-reviews": {
+    "ref": "sujalsuthar/airlines-reviews",
+    "title": "Airline Reviews Dataset",
+    "status": "rejected",
+    "reason": "airlines_reviews.csv: no 'satisfaction' column"
+  },
+  "hassanamin/atis-airlinetravelinformationsystem": {
+    "ref": "hassanamin/atis-airlinetravelinformationsystem",
+    "title": "ATIS Airline Travel Information System",
+    "status": "rejected",
+    "reason": "atis_intents.csv: no 'satisfaction' column; atis_intents_test.csv: no 'satisfaction' column; atis_intents_train.csv: no 'satisfaction' column"
+  },
+  "chaudharyanshul/airline-reviews": {
+    "ref": "chaudharyanshul/airline-reviews",
+    "title": "Airline Reviews",
+    "status": "rejected",
+    "reason": "BA_AirlineReviews.csv: no 'satisfaction' column"
+  },
+  "safaeahb/ecommerce-shipping-sql-power-bi": {
+    "ref": "safaeahb/ecommerce-shipping-sql-power-bi",
+    "title": "Ecommerce Shipping Analysis SQL + Power BI",
+    "status": "rejected",
+    "reason": "Ecommerce Shipping Data.csv: no 'satisfaction' column"
+  },
+  "willianoliveiragibin/flight-chronicles": {
+    "ref": "willianoliveiragibin/flight-chronicles",
+    "title": "Flight Chronicles",
+    "status": "rejected",
+    "reason": "data new.csv: no 'satisfaction' column"
   }
 }

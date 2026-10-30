@@ -98,8 +98,7 @@
 
   <section class="card">
     <h2>Cross-validation score per experiment</h2>
-    <p class="sub" id="chart-sub">Full-data runs in the order they were trained. Reference lines are the public
-      leaderboard's cut-offs; public scores have run about 0.0003 above CV here, so read them as approximate.</p>
+    <p class="sub" id="chart-sub">Full-data runs in the order they were trained.</p>
     <div class="legend" id="legend"></div>
     <div class="chart-wrap" id="chart-wrap"><div class="tooltip" id="tooltip"></div></div>
     <details><summary>Table view</summary><div class="scroll" id="exp-table"></div></details>
@@ -151,6 +150,8 @@ async function load(comp) {
     setTile('leaderboard', `top ${lb.top_percent}%`,
       `rank ${lb.rank} / ${lb.teams} · best public ${lb.best_public_score} · top 20% at ${lb.top20_threshold}`);
     renderChart(full, lb);
+    $('chart-sub').textContent = 'Full-data runs in the order they were trained. Reference lines are the public '
+      + `leaderboard's cut-offs, which apply to public scores; ${publicGap(full, lb)}`;
   }).catch(() => {});
   renderChart(full);
   renderExperimentTable(full);
@@ -191,6 +192,17 @@ const MARK = {
   agents: (x, y) => `<circle cx="${x}" cy="${y}" r="5" fill="var(--series-agents)" stroke="var(--surface-1)" stroke-width="2"/>`,
   manual: (x, y) => `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" rx="1.5" fill="var(--series-manual)" stroke="var(--surface-1)" stroke-width="2"/>`,
 };
+
+// How public scores have compared with CV for the runs submitted here, so the
+// cut-off lines (public) can be read against CV points.
+function publicGap(full, lb) {
+  const cv = Object.fromEntries(full.map((e) => [e.run_id, e.cv_score]));
+  const gaps = (lb.submissions ?? []).filter((s) => s.run_id in cv).map((s) => s.public_score - cv[s.run_id]);
+  if (!gaps.length) return 'no submitted run yet to compare them with CV.';
+  const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+  const runs = gaps.length === 1 ? 'the 1 submitted run' : `the ${gaps.length} submitted runs`;
+  return `for ${runs} public scored ${Math.abs(mean).toFixed(4)} ${mean >= 0 ? 'above' : 'below'} CV on average.`;
+}
 
 // Where a score would land: the leaderboard cut-offs it clears.
 function landing(score, lb) {

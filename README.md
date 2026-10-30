@@ -184,7 +184,9 @@ on the first run.
 
 ### Dashboard
 
-![Dashboard: s6e9 runs against the leaderboard cut-offs](docs/dashboard.png)
+![Dashboard: s6e9 runs against the leaderboard cut-offs](docs/dashboard-s6e9.png)
+
+The s5e6 view, with the run past the top-20% goal: [docs/dashboard-s5e6.png](docs/dashboard-s5e6.png).
 
 Open **http://localhost:8000/dashboard**. Served by the worker, it reads the same
 API and shows, per competition:
@@ -193,7 +195,8 @@ API and shows, per competition:
   attempts by status;
 - the CV score of every full-data run in training order, marking runs by the
   agents apart from baselines and manual checks, with the best-so-far line and
-  the public leaderboard's top-50% and top-20% cut-offs drawn on the same axis
+  the public leaderboard's top-50% and top-20% cut-offs drawn on the same axis,
+  and how far public scores have landed from CV for the runs submitted there
   (the tooltip says where each run would land; a table view is one click away);
 - every attempt, and for the one selected, its trace as a timeline: each
   decision with its reasoning, guardrail corrections, tool calls and results,
@@ -259,6 +262,33 @@ On all rows that configuration scored **CV 0.36004, public 0.36696, rank
 the agents; the combination was set by hand, and the two rules behind it (try
 external data early; numeric columns with few values as categorical) are now in
 the agents' shared instructions.
+
+**Third competition, no code changes.** `playground-series-s6e10` (airline
+passenger satisfaction, binary, AUC, 700k rows) was profiled, searched and run by
+the agents with nothing set by hand. Discovery found the original dataset, whose
+target is spelled `satisfied` / `neutral or dissatisfied` instead of True / False;
+the worker now maps such labels by comparing feature means per label (recorded in
+`registry.json`) and rejects re-uploads of the same source cut or recoded
+differently, which kept 2 of 9 candidates.
+
+| Run | CV | Public | Rank |
+|---|---|---|---|
+| Agents, 4 iterations: original dataset first, then a second dataset, ratings as categorical | 0.95854 | 0.95794 | 2829 / 3521 (top 80.3%) |
+| Checked by hand: LightGBM baseline, no external data | 0.95876 | — | — |
+| Checked by hand: + frequency and target encoding of age, distance and delays | 0.96007 | — | — |
+| Checked by hand: same with `learning_rate` 0.02, `num_leaves` 127 | **0.96036** | **0.96006** | 1716 / 3522 (top 48.7%) |
+
+The baseline beat the agents' first run: the external rows hurt here, and with
+no reference run the team could not see it. That became a guardrail: the first
+run of a competition is now the plain baseline. Blends, digit features and ratings
+as categorical added nothing; the top-20% cut-off (0.96183) was not reached.
+
+A second agent attempt started from that history: it raised `num_leaves` to 255
+(CV 0.96032), then blended it with the XGBoost run (CV 0.96037, a new best by
+0.00001; the Evaluator held the submission because the gain is far below the CV
+standard deviation). In the third iteration both Groq models had used their daily
+quota; the attempt closed as failed with that reason in its trace. The fallback
+had already switched the 120b agents to the 20b mid-attempt without help.
 
 Top-20% threshold on the public leaderboard: 0.9464. Agents run on Groq
 `openai/gpt-oss-120b` (free tier); a full-data iteration takes about 2–3 minutes.

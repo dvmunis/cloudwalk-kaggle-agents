@@ -38,4 +38,8 @@ def summarize(rows: list[dict], own_submissions: list[dict]) -> dict:
         return {"teams": len(scores), "message": "No scored submissions yet"}
     higher_is_better = scores[0] >= scores[-1]
     best_own = max(own) if higher_is_better else min(own)
-    return {"best_public_score": best_own, "n_submissions": len(own), **position(scores, best_own)}
+    # The worker submits with the run id as the first word of the description.
+    scored = [{"run_id": str(r.get("description", "")).split(" ")[0], "public_score": _to_float(r.get("publicScore"))}
+              for r in own_submissions if _to_float(r.get("publicScore")) is not None]
+    return {"best_public_score": best_own, "n_submissions": len(own), "submissions": scored,
+            **position(scores, best_own)}

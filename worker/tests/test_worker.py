@@ -104,3 +104,11 @@ def test_dashboard_and_competition_list(client):
     assert client.get("/competitions").json() == ["binary-comp"]
     page = client.get("/dashboard")
     assert page.status_code == 200 and "<title>" in page.text
+
+
+def test_leaderboard_summary_ties_public_scores_to_runs():
+    rows = [{"Score": "0.9"}, {"Score": "0.8"}]
+    own = [{"description": "20261030-031552-lightgbm-6339bf lr 0.02", "publicScore": "0.85"},
+           {"description": "manual upload", "publicScore": ""}]
+    summary = leaderboard.summarize(rows, own)
+    assert summary["submissions"] == [{"run_id": "20261030-031552-lightgbm-6339bf", "public_score": 0.85}]
