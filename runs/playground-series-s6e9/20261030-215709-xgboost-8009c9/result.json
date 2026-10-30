@@ -1,0 +1,126 @@
+{
+  "run_id": "20261030-215709-xgboost-8009c9",
+  "attempt_id": "20261030-215316-8023da",
+  "competition": "playground-series-s6e9",
+  "created_at": "2026-10-30T21:57:10.688295+00:00",
+  "metric": "roc_auc",
+  "higher_is_better": true,
+  "cv_score": 0.9426729717874438,
+  "cv_std": 0.0019296245195393326,
+  "fold_scores": [
+    0.938900625329737,
+    0.9440514988580427,
+    0.9437404974221086,
+    0.943205804224399,
+    0.9437096130774535
+  ],
+  "best_iterations": [
+    681,
+    471,
+    515,
+    590,
+    468
+  ],
+  "train_rows": 133733,
+  "n_features": 25,
+  "top_features": [
+    {
+      "feature": "Subsidy_Available",
+      "importance": 0.47
+    },
+    {
+      "feature": "Environmental_Concern_Level",
+      "importance": 0.28
+    },
+    {
+      "feature": "Subsidy_Available_te",
+      "importance": 0.11
+    },
+    {
+      "feature": "Range_Anxiety_Level",
+      "importance": 0.03
+    },
+    {
+      "feature": "Annual_Income_USD",
+      "importance": 0.02
+    },
+    {
+      "feature": "Range_Anxiety_Level_te",
+      "importance": 0.01
+    },
+    {
+      "feature": "Annual_Income_USD_te",
+      "importance": 0.01
+    },
+    {
+      "feature": "Home_Charging_Possible",
+      "importance": 0.01
+    },
+    {
+      "feature": "Annual_Income_USD_freq",
+      "importance": 0.01
+    },
+    {
+      "feature": "Age_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Daily_Commute_km_freq",
+      "importance": 0.0
+    },
+    {
+      "feature": "Home_Charging_Possible_te",
+      "importance": 0.0
+    },
+    {
+      "feature": "Charging_Stations_Near_Work",
+      "importance": 0.0
+    }
+  ],
+  "duration_s": 42.2,
+  "config": {
+    "metric": "roc_auc",
+    "model": "xgboost",
+    "params": {
+      "learning_rate": 0.02,
+      "n_estimators": 8000
+    },
+    "features": {
+      "drop": [],
+      "frequency_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age"
+      ],
+      "as_category": [],
+      "add_null_count": false,
+      "digit_features": [],
+      "target_encode": [
+        "Annual_Income_USD",
+        "Daily_Commute_km",
+        "Age",
+        "Gender",
+        "City_Type",
+        "Current_Car_Type",
+        "Home_Charging_Possible",
+        "Subsidy_Available",
+        "Range_Anxiety_Level"
+      ]
+    },
+    "target_transform": "none",
+    "n_folds": 5,
+    "sample_frac": 0.2,
+    "seed": 42,
+    "external_data": [],
+    "blend_runs": [],
+    "note": "iteration 2: Add target encoding for the additional categorical columns (Gender, City_Type, Current_Car_Type, Home_Charging_Possible, Subsidy_Available, Range_Anxiety_Level) and retrain XGBoost."
+  }
+}

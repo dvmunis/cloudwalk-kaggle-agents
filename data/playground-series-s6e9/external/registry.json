@@ -99,5 +99,35 @@
     "title": "Social Media & Mental Health",
     "status": "rejected",
     "reason": "social_media_mental_health.csv: no 'Will_Buy_EV' column"
+  },
+  "varnava235/jakarta-ev-user-distribution-dataset-2026": {
+    "ref": "varnava235/jakarta-ev-user-distribution-dataset-2026",
+    "title": "Jakarta EV User Estimated Dataset (2026)",
+    "status": "rejected",
+    "reason": "dki_jakarta_ev_users_estimated_distribusion.csv: no 'Will_Buy_EV' column"
+  },
+  "kangkankalita/will-buy-ev": {
+    "ref": "kangkankalita/will-buy-ev",
+    "title": "Will Buy EV",
+    "status": "rejected",
+    "reason": "submission.csv: only 0 of 13 feature columns; test.csv: no 'Will_Buy_EV' column; train.csv: same number of rows as the competition files (likely a copy)"
+  },
+  "vivek2113/will-buy-ev-prediction": {
+    "ref": "vivek2113/will-buy-ev-prediction",
+    "title": "Will Buy EV Prediction",
+    "status": "rejected",
+    "reason": "submission (1).csv: only 0 of 13 feature columns"
+  },
+  "maxbogus/ev-dataset": {
+    "ref": "maxbogus/ev-dataset",
+    "title": "EV Adoption \u2014 Playground S6E9",
+    "status": "rejected",
+    "reason": "sample_submission.csv: only 0 of 13 feature columns; test.csv: no 'Will_Buy_EV' column; train.csv: same number of rows as the competition files (likely a copy)"
+  },
+  "aikstokdata/korean-equity-daily-prices-dart-filing-impact": {
+    "ref": "aikstokdata/korean-equity-daily-prices-dart-filing-impact",
+    "title": "Korean Equity Daily Prices + DART Filing Impact",
+    "status": "rejected",
+    "reason": "daily_prices.csv: no 'Will_Buy_EV' column; filing_impact_summary.csv: no 'Will_Buy_EV' column; filing_price_impact.csv: no 'Will_Buy_EV' column; stocks.csv: no 'Will_Buy_EV' column"
   }
 }
