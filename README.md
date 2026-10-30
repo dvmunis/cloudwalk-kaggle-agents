@@ -221,6 +221,17 @@ nodes outside n8n with a harness that mimics `$()`.
 
 ## Results so far
 
+| Competition | Task | Best public (rank) | Goal: top 20% | How |
+|---|---|---|---|---|
+| `playground-series-s5e6` fertilizer | multiclass, MAP@3 | 0.36696 (446 / 2650, **top 16.8%**) | reached | original dataset found by the agents + XGBoost depth 8 with numeric columns as categorical (set by hand, now in the agents' rules) |
+| `playground-series-s6e9` EV purchase | binary, AUC | 0.94558 (1425 / 3576, top 39.9%) | not reached (cut-off 0.9464) | target encoding of the numeric columns; agents' best CV 0.94524 |
+| `playground-series-s6e10` airline satisfaction | binary, AUC | 0.96006 (1716 / 3522, top 48.7%) | not reached (cut-off 0.96183) | target encoding of age, distance, delays; agents' best CV 0.96037 |
+
+The same code ran all three; only the competition slug changed. Details per
+competition below.
+
+### s6e9
+
 | Competition | Approach | CV | Public | Rank |
 |---|---|---|---|---|
 | playground-series-s6e9 | LightGBM defaults (no-LLM baseline) | 0.94166 | 0.94150 | 2527 / 3576 (top 70.7%) |
@@ -237,6 +248,8 @@ LB Reviewer judged LightGBM tuning exhausted and moved the plan to XGBoost;
 iteration 2 proposed a repeat, which the guardrail skipped and fed back;
 iteration 3 trained XGBoost (CV 0.94306, best so far). The Evaluator held the
 submission because the gain was below the CV standard deviation.
+
+### s5e6
 
 **Second competition, no code changes.** `playground-series-s5e6` (fertilizer
 recommendation) is multiclass with 7 classes, scored by MAP@3 with a top-3 label
@@ -262,6 +275,8 @@ On all rows that configuration scored **CV 0.36004, public 0.36696, rank
 the agents; the combination was set by hand, and the two rules behind it (try
 external data early; numeric columns with few values as categorical) are now in
 the agents' shared instructions.
+
+### s6e10
 
 **Third competition, no code changes.** `playground-series-s6e10` (airline
 passenger satisfaction, binary, AUC, 700k rows) was profiled, searched and run by
@@ -290,8 +305,10 @@ standard deviation). In the third iteration both Groq models had used their dail
 quota; the attempt closed as failed with that reason in its trace. The fallback
 had already switched the 120b agents to the 20b mid-attempt without help.
 
-Top-20% threshold on the public leaderboard: 0.9464. Agents run on Groq
-`openai/gpt-oss-120b` (free tier); a full-data iteration takes about 2–3 minutes.
+### LLM budget
+
+Agents run on Groq `openai/gpt-oss-120b` (free tier); a full-data iteration takes
+2–3 minutes on s6e9 and s6e10 and about 25 on s5e6 (750k rows, 7 classes).
 
 **Groq free-tier budget.** `gpt-oss-120b` allows 8,000 tokens per minute and
 200,000 per day. An iteration makes four LLM calls of about 4–5k tokens each, so
@@ -304,7 +321,7 @@ its own summary of the Groq error to the workflow, so the rule reads persistence
 rather than Groq's message. The trace records which model answered and why. Both
 models can be changed with `GROQ_MODEL` and `GROQ_FALLBACK_MODEL`.
 
-### What the first traces taught us
+### What the first traces taught us (s6e9)
 
 The first agent attempt worked end to end but the trace exposed weak decisions.
 Each one became a fix:
@@ -327,7 +344,7 @@ Building the loop exposed more:
 | With target encoding, the attribution guardrail forced the best run's model (XGBoost), so "LightGBM + target encoding" became a repeat and was skipped | The reference for attribution is the best run of the model the agent chose |
 | Agents kept proposing a null count (no missing values), which the guardrail removed, so three iterations in a row were skipped | After a skip, the focus moves to another plan step and explains why; two skips in a row stop the attempt; prompts say a null count needs missing values |
 
-### Original dataset and what moved the score
+### s6e9: original dataset and what moved the score
 
 The agents found the original dataset on their own: the Planner wrote searches
 from the column names, discovery checked ten candidates and accepted
@@ -354,7 +371,7 @@ columns; the agents only applied it to text columns until the prompt said it
 works for numeric ones too. This finding came from a manual check while building
 the external-data tool, and the agents then built on that run.
 
-### Where the score stood before that
+### s6e9: where the score stood before that
 
 Target encoding of the categorical columns changed nothing (they are already
 native categoricals), and blending LightGBM with XGBoost adds about +0.0002 AUC:
